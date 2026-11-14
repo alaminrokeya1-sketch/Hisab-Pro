@@ -1,696 +1,122 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="bn">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>হিসাব প্রো v6.1 - ক্লাউড খাতা</title>
-    <link rel="manifest" href="manifest.webmanifest">
-    <meta name="theme-color" content="#0f766e">
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='110' fill='%230f766e'/><rect x='110' y='320' width='45' height='90' rx='6' fill='%23ffffff'/><rect x='185' y='270' width='45' height='140' rx='6' fill='%23ffffff'/><rect x='260' y='300' width='45' height='110' rx='6' fill='%23ffffff'/><rect x='335' y='210' width='45' height='200' rx='6' fill='%23ffffff'/><path d='M95 340 L195 230 L275 285 L395 155' fill='none' stroke='%23eab308' stroke-width='26' stroke-linecap='round' stroke-linejoin='round'/><polygon points='415,135 350,145 405,200' fill='%23eab308'/><circle cx='215' cy='145' r='58' fill='%23eab308'/><text x='215' y='168' font-family='sans-serif' font-size='72' font-weight='bold' fill='%23ffffff' text-anchor='middle'>৳</text></svg>">
-    <style>
-        :root {
-            --primary: #0f766e;
-            --primary-dark: #115e59;
-            --bg: #f3f4f6;
-            --card: #ffffff;
-            --customer: #16a34a;
-            --supplier: #ea580c;
-            --danger: #dc2626;
-        }
-        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        body { margin: 0; background-color: var(--bg); color: #1f2937; padding-bottom: 85px; }
-        
-        /* অথেনটিকেশন স্ক্রিন */
-        #auth-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg); display: flex; justify-content: center; align-items: center; z-index: 2000; padding: 20px; }
-        .auth-card { background: var(--card); padding: 25px; border-radius: 14px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 100%; max-width: 380px; text-align: center; }
-        .auth-card h2 { color: var(--primary); margin: 12px 0 15px 0; }
-        .toggle-link { color: var(--primary); cursor: pointer; font-size: 0.9rem; text-decoration: underline; margin-top: 14px; display: inline-block; }
-
-        /* হেডার ও দোকান সিলেক্টর */
-        header { background: var(--primary); color: white; padding: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-        .brand-box { display: flex; align-items: center; gap: 10px; }
-        .brand-box h2 { margin: 0; font-size: 1.2rem; }
-        .header-actions { display: flex; gap: 8px; }
-        .top-btn { background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.4); padding: 6px 10px; border-radius: 6px; font-size: 0.8rem; cursor: pointer; width: auto; margin: 0; }
-        .logout-btn { background: var(--danger); border: none; }
-
-        .shop-selector-box { background: white; padding: 8px 12px; border-radius: 8px; display: flex; align-items: center; gap: 10px; }
-        .shop-selector-box label { color: #374151; font-weight: bold; font-size: 0.9rem; white-space: nowrap; }
-        .shop-selector-box select { border: none; font-size: 1rem; font-weight: bold; color: var(--primary); width: 100%; outline: none; background: transparent; margin: 0; padding: 4px; }
-
-        .container { max-width: 500px; margin: 15px auto; padding: 0 15px; }
-
-        /* সামারি ও ট্যাব */
-        .summary { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
-        .box { background: var(--card); padding: 12px; border-radius: 8px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-        .box h4 { margin: 0 0 5px 0; font-size: 0.85rem; color: #6b7280; }
-        .box p { margin: 0; font-size: 1.2rem; font-weight: bold; }
-
-        .tabs { display: flex; background: #e5e7eb; border-radius: 8px; padding: 4px; margin-bottom: 15px; }
-        .tab-btn { flex: 1; padding: 10px; border: none; background: transparent; font-weight: bold; color: #4b5563; border-radius: 6px; cursor: pointer; margin: 0; }
-        .tab-btn.active { background: white; color: var(--primary); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-
-        /* লিস্ট আইটেম */
-        .list { list-style: none; padding: 0; margin: 0; }
-        .item { background: var(--card); padding: 14px; margin-bottom: 10px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 2px rgba(0,0,0,0.05); border-left: 4px solid #ccc; cursor: pointer; }
-        .item.customer { border-left-color: var(--customer); }
-        .item.supplier { border-left-color: var(--supplier); }
-        .item-info h4 { margin: 0 0 4px 0; font-size: 1.05rem; color: #111827; }
-        .item-info small { color: #6b7280; font-size: 0.82rem; }
-        .item-amount { text-align: right; }
-        .item-amount span { display: block; font-weight: bold; font-size: 1.1rem; }
-        .item-amount small { font-size: 0.75rem; color: #6b7280; }
-
-        /* ভাসমান প্লাস (+) আইকন */
-        .fab-btn { position: fixed; bottom: 25px; right: 25px; width: 60px; height: 60px; border-radius: 50%; background: var(--primary); color: white; font-size: 2rem; border: none; box-shadow: 0 4px 12px rgba(15, 118, 110, 0.4); cursor: pointer; display: flex; justify-content: center; align-items: center; z-index: 100; }
-        
-        /* মডাল ফর্ম */
-        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: none; justify-content: center; align-items: center; z-index: 1000; padding: 15px; overflow-y: auto; }
-        .modal-content { background: white; padding: 20px; border-radius: 12px; width: 100%; max-width: 400px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); max-height: 90vh; overflow-y: auto; }
-        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-        .modal-header h3 { margin: 0; color: var(--primary); }
-        .close-btn { background: none; border: none; font-size: 1.5rem; color: #6b7280; cursor: pointer; width: auto; padding: 0; margin: 0; }
-        input, select, button.submit-btn { width: 100%; padding: 11px; margin: 6px 0; border: 1px solid #d1d5db; border-radius: 8px; font-size: 0.95rem; }
-        button.submit-btn { background: var(--primary); color: white; border: none; font-weight: bold; cursor: pointer; margin-top: 10px; }
-        button:disabled { background: #9ca3af !important; cursor: not-allowed; }
-
-        /* ক্যামেরা ও গ্যালারি বাটন */
-        .photo-picker-box { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 8px 0; }
-        .photo-btn { background: #f3f4f6; color: #374151; border: 1px dashed #9ca3af; padding: 10px; border-radius: 8px; text-align: center; font-size: 0.85rem; font-weight: bold; cursor: pointer; }
-        #photo-preview { width: 100%; max-height: 150px; object-fit: contain; border-radius: 8px; margin-top: 8px; display: none; border: 1px solid #e5e7eb; }
-
-        /* আলাদা খাতা (Ledger View) */
-        #ledger-view { display: none; }
-        .back-bar { background: var(--primary); color: white; padding: 12px 15px; display: flex; align-items: center; justify-content: space-between; }
-        .back-btn { background: rgba(255,255,255,0.2); border: none; color: white; padding: 6px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; width: auto; }
-        .ledger-header-card { background: white; padding: 15px; border-radius: 8px; margin-bottom: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center; }
-        .tx-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
-        .btn-due { background: var(--danger); color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; }
-        .btn-paid { background: var(--customer); color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; }
-        
-        .tx-item { background: white; padding: 12px; border-radius: 8px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
-        .tx-thumb { width: 45px; height: 45px; object-fit: cover; border-radius: 6px; border: 1px solid #d1d5db; cursor: pointer; margin-top: 5px; }
-        .empty-msg { text-align: center; color: #6b7280; padding: 30px 10px; background: white; border-radius: 8px; }
-        #loading { text-align: center; padding: 40px; font-weight: bold; color: var(--primary); }
-
-        #image-viewer-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); display: none; justify-content: center; align-items: center; z-index: 3000; flex-direction: column; padding: 15px; }
-        #image-viewer-modal img { max-width: 100%; max-height: 80vh; border-radius: 8px; }
-    </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#087f6e">
+<meta name="description" content="Hisab Pro — অফলাইন হিসাব খাতা">
+<title>Hisab Pro</title>
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="icon" href="./icon-192.png">
+<style>
+:root{--green:#087f6e;--green2:#0f9d78;--red:#d94848;--ink:#172b2a;--muted:#71807e;--bg:#f3f7f6;--card:#fff;--line:#e3ece9}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Noto Sans Bengali",sans-serif;padding-bottom:86px}
+header{background:linear-gradient(135deg,#076b60,#0e9880);color:white;padding:14px 16px 17px;position:sticky;top:0;z-index:5;box-shadow:0 3px 12px #073f3526}
+.top{display:flex;align-items:center;justify-content:space-between;gap:10px}.brand{display:flex;align-items:center;gap:10px}.brand img{width:42px;height:42px;border-radius:11px}.brand b{font-size:20px;letter-spacing:.2px}.brand small{display:block;opacity:.8;font-size:11px}.head-actions{display:flex;gap:6px}.head-actions button{border:1px solid #ffffff66;background:#ffffff20;color:white;border-radius:9px;padding:8px 10px;font-weight:650}
+.modebar{display:flex;gap:7px;margin-top:13px}.modebar button{flex:1;border:1px solid #ffffff70;background:#ffffff18;color:white;border-radius:9px;padding:9px}.modebar button.active{background:white;color:var(--green);font-weight:750}
+main{max-width:720px;margin:14px auto;padding:0 13px}.balances{display:grid;grid-template-columns:1fr 1fr;gap:10px}.balance{background:white;border-radius:15px;padding:14px;box-shadow:0 3px 12px #143b3210}.balance small{color:var(--muted);font-weight:650}.balance strong{display:block;font-size:22px;margin-top:5px}.red{color:var(--red)}.green{color:var(--green2)}
+.searchrow{display:flex;gap:8px;margin:14px 0 10px}.searchrow input{flex:1;min-width:0}.searchrow input,.field{border:1px solid var(--line);border-radius:11px;padding:12px;background:white;font:inherit;outline:none}.filters{display:flex;gap:7px;margin-bottom:12px}.filters button,.soft{border:1px solid var(--line);background:white;color:#536360;border-radius:999px;padding:8px 14px}.filters button.active{background:#e0f3ee;border-color:#a9d9cd;color:#076b60;font-weight:700}
+.list{display:grid;gap:8px}.party{display:flex;align-items:center;gap:11px;background:white;padding:12px;border-radius:13px;box-shadow:0 2px 8px #143b3208;cursor:pointer}.avatar{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;background:#e1f3ee;color:var(--green);font-weight:800;font-size:18px;flex:none}.pinfo{flex:1;min-width:0}.pinfo b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.pinfo small{color:var(--muted)}.amount{text-align:right;font-weight:800;white-space:nowrap}.amount small{display:block;font-size:11px;font-weight:500;color:var(--muted)}
+.fab{position:fixed;right:20px;bottom:22px;width:58px;height:58px;border:0;border-radius:50%;background:var(--green);color:white;font-size:32px;box-shadow:0 7px 20px #087f6e55;z-index:10}
+.panel{background:white;border-radius:15px;padding:14px;margin:12px 0;box-shadow:0 2px 10px #143b3209}.row{display:flex;align-items:center;justify-content:space-between;gap:9px}.btn{border:0;border-radius:10px;padding:11px 13px;background:var(--green);color:white;font:inherit;font-weight:700}.btn.redbtn{background:var(--red)}.btn.greenbtn{background:#13966f}.btn.light{background:#e9f4f1;color:#086e60}.btnline{display:flex;gap:8px;flex-wrap:wrap}.btnline>*{flex:1}
+.hidden{display:none!important}.back{border:0;background:transparent;color:var(--green);font-size:16px;font-weight:700;padding:5px 0}
+.entrygrid{display:grid;grid-template-columns:1fr 1fr;gap:9px}.entry{border:2px solid var(--red);border-radius:12px;padding:10px}.entry.in{border-color:var(--green2)}.entry label{display:block;font-size:12px;color:var(--muted);font-weight:700}.entry input{width:100%;border:0;outline:0;font-size:22px;font-weight:800;padding:6px 0;background:transparent;color:var(--ink)}
+textarea.field{width:100%;resize:vertical;min-height:65px}.field.full{width:100%;margin:7px 0}
+.keypad{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-top:10px}.keypad button{border:1px solid var(--line);background:#f8fbfa;border-radius:10px;padding:12px 4px;font-size:18px;font-weight:700;color:var(--ink)}.keypad button.op{background:#e2f3ee;color:var(--green)}.keypad button.enter{background:var(--green);color:white}
+.tx{border-bottom:1px solid var(--line);padding:11px 0}.tx:last-child{border:0}.tx small{color:var(--muted)}.tx-actions{display:flex;gap:6px}.tx-actions button{border:0;border-radius:7px;padding:5px 8px;background:#eef4f2;color:#36534d}
+.modal{position:fixed;inset:0;background:#061d19a6;z-index:30;display:grid;place-items:center;padding:15px}.modalbox{background:white;border-radius:17px;padding:17px;width:min(100%,460px);max-height:90vh;overflow:auto}.modalbox h3{margin:0 0 12px}.modalbox label{font-size:13px;color:var(--muted);font-weight:700}.modalbox input,.modalbox select{width:100%;padding:11px;border:1px solid var(--line);border-radius:9px;margin:5px 0 11px;font:inherit}
+.nav{position:fixed;bottom:0;left:0;right:0;background:white;border-top:1px solid var(--line);display:flex;justify-content:space-around;padding:8px 5px calc(8px + env(safe-area-inset-bottom));z-index:8}.nav button{border:0;background:none;color:#71807e;font-size:11px;font-weight:700;display:grid;gap:3px;justify-items:center}.nav button span{font-size:19px}.nav button.active{color:var(--green)}
+.empty{text-align:center;color:var(--muted);padding:30px 10px;background:white;border-radius:13px}
+table{width:100%;border-collapse:collapse;font-size:13px}td,th{padding:9px 6px;border-bottom:1px solid var(--line);text-align:left}th{color:var(--muted)}
+.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#183e37;color:white;padding:10px 15px;border-radius:30px;z-index:60;display:none}
+@media(min-width:600px){main{padding:0 18px}.balance strong{font-size:25px}}
+</style>
 </head>
 <body>
-
-<div id="loading">ক্লাউড সার্ভারের সাথে যুক্ত হচ্ছে...</div>
-
-<!-- ১. লগইন ও রেজিস্ট্রেশন স্ক্রিন -->
-<div id="auth-screen" style="display: none;">
-    <div class="auth-card">
-        <svg width="70" height="70" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" style="border-radius: 16px; box-shadow: 0 3px 8px rgba(0,0,0,0.15);">
-            <rect width="512" height="512" rx="110" fill="#0f766e"/>
-            <rect x="110" y="320" width="45" height="90" rx="6" fill="#ffffff"/>
-            <rect x="185" y="270" width="45" height="140" rx="6" fill="#ffffff"/>
-            <rect x="260" y="300" width="45" height="110" rx="6" fill="#ffffff"/>
-            <rect x="335" y="210" width="45" height="200" rx="6" fill="#ffffff"/>
-            <path d="M95 340 L195 230 L275 285 L395 155" fill="none" stroke="#eab308" stroke-width="26" stroke-linecap="round" stroke-linejoin="round"/>
-            <polygon points="415,135 350,145 405,200" fill="#eab308"/>
-            <circle cx="215" cy="145" r="58" fill="#eab308"/>
-            <text x="215" y="168" font-family="sans-serif" font-size="72" font-weight="bold" fill="#ffffff" text-anchor="middle">৳</text>
-        </svg>
-        <h2 id="auth-title">হিসাব প্রো - লগইন</h2>
-        <input type="text" id="auth-name" placeholder="আপনার বা দোকানের নাম" style="display: none;">
-        <input type="text" id="auth-contact" placeholder="মোবাইল নাম্বার অথবা জিমেইল" required>
-        <input type="password" id="auth-pass" placeholder="পাসওয়ার্ড (কমপক্ষে ৬ অক্ষর)" required>
-        <button class="submit-btn" id="auth-btn">লগইন করুন</button>
-        <span class="toggle-link" id="toggle-auth">নতুন অ্যাকাউন্ট খুলুন (রেজিস্ট্রেশন)</span>
-    </div>
-</div>
-
-<!-- ২. মেইন অ্যাপ স্ক্রিন -->
-<div id="app-screen" style="display: none;">
-    <div id="main-view">
-        <header>
-            <div class="header-top">
-                <div class="brand-box">
-                    <svg width="38" height="38" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" style="border-radius: 8px; border: 1px solid rgba(255,255,255,0.3);">
-                        <rect width="512" height="512" rx="110" fill="#0f766e"/>
-                        <rect x="110" y="320" width="45" height="90" rx="6" fill="#ffffff"/>
-                        <rect x="185" y="270" width="45" height="140" rx="6" fill="#ffffff"/>
-                        <rect x="260" y="300" width="45" height="110" rx="6" fill="#ffffff"/>
-                        <rect x="335" y="210" width="45" height="200" rx="6" fill="#ffffff"/>
-                        <path d="M95 340 L195 230 L275 285 L395 155" fill="none" stroke="#eab308" stroke-width="26" stroke-linecap="round" stroke-linejoin="round"/>
-                        <polygon points="415,135 350,145 405,200" fill="#eab308"/>
-                        <circle cx="215" cy="145" r="58" fill="#eab308"/>
-                        <text x="215" y="168" font-family="sans-serif" font-size="72" font-weight="bold" fill="#ffffff" text-anchor="middle">৳</text>
-                    </svg>
-                    <div>
-                        <h2>হিসাব প্রো</h2>
-                        <small id="user-display" style="font-size: 0.75rem; opacity: 0.9;"></small>
-                    </div>
-                </div>
-                <div class="header-actions">
-                    <button class="top-btn" id="add-shop-btn">+ দোকান</button>
-                    <button class="top-btn logout-btn" id="logout-btn">লগআউট</button>
-                </div>
-            </div>
-            <div class="shop-selector-box">
-                <label for="shop-select">🏪 দোকান:</label>
-                <select id="shop-select"></select>
-            </div>
-        </header>
-
-        <div class="container">
-            <div class="summary">
-                <div class="box">
-                    <h4>মোট কাস্টমার বাকি</h4>
-                    <p style="color: var(--customer);" id="total-customer">৳ ০</p>
-                </div>
-                <div class="box">
-                    <h4>মোট সাপ্লায়ার দেনা</h4>
-                    <p style="color: var(--supplier);" id="total-supplier">৳ ০</p>
-                </div>
-            </div>
-
-            <div class="tabs">
-                <button class="tab-btn active" id="tab-customer">কাস্টমার তালিকা</button>
-                <button class="tab-btn" id="tab-supplier">সাপ্লায়ার তালিকা</button>
-            </div>
-
-            <ul class="list" id="party-list"></ul>
-        </div>
-
-        <button class="fab-btn" id="open-party-modal-btn" title="কাস্টমার বা সাপ্লায়ার যোগ করুন">+</button>
-    </div>
-
-    <!-- ৩. আলাদা খাতা স্ক্রিন -->
-    <div id="ledger-view">
-        <div class="back-bar">
-            <button class="back-btn" id="close-ledger-btn">← ফিরে যান</button>
-            <span style="font-weight: bold;">লেনদেনের খাতা</span>
-            <button class="back-btn" style="background: var(--danger);" id="delete-party-btn">মুছুন</button>
-        </div>
-
-        <div class="container">
-            <div class="ledger-header-card">
-                <div>
-                    <h3 id="ledger-name" style="margin: 0 0 5px 0;">নাম</h3>
-                    <small id="ledger-phone" style="color: #6b7280;">📞 মোবাইল</small>
-                </div>
-                <div style="text-align: right;">
-                    <small id="ledger-status-label" style="color: #6b7280;">মোট ব্যালেন্স</small>
-                    <h2 id="ledger-balance" style="margin: 0;">৳ ০</h2>
-                </div>
-            </div>
-
-            <div class="tx-buttons">
-                <button class="btn-due" id="btn-add-due">+ বাকি দিলাম</button>
-                <button class="btn-paid" id="btn-add-paid">+ জমা পেলাম</button>
-            </div>
-
-            <h4 style="margin: 0 0 10px 0; color: #374151;">লেনদেনের ইতিহাস:</h4>
-            <ul class="list" id="tx-list"></ul>
-        </div>
-    </div>
-</div>
-
-<!-- ৪. নতুন কাস্টমার / সাপ্লায়ার মডাল -->
-<div class="modal" id="party-modal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3>নতুন কাস্টমার / সাপ্লায়ার</h3>
-            <button class="close-btn" id="close-party-modal">&times;</button>
-        </div>
-        <label style="font-size: 0.85rem; font-weight: bold;">ধরন নির্বাচন করুন:</label>
-        <select id="party-type">
-            <option value="customer">কাস্টমার (পাবো)</option>
-            <option value="supplier">সাপ্লায়ার (দিবো)</option>
-        </select>
-        <input type="text" id="party-name" placeholder="নাম লিখুন (যেমন: রহিম স্টোর)" required>
-        <input type="tel" id="party-phone" placeholder="মোবাইল নাম্বার (ঐচ্ছিক)">
-        <button class="submit-btn" id="save-party-btn">তালিকায় যুক্ত করুন</button>
-    </div>
-</div>
-
-<!-- ৫. লেনদেন যোগ করার মডাল -->
-<div class="modal" id="tx-modal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3 id="tx-modal-title">নতুন লেনদেন</h3>
-            <button class="close-btn" id="close-tx-modal">&times;</button>
-        </div>
-        
-        <input type="number" id="tx-amount" placeholder="টাকার পরিমাণ (৳)" required>
-        <input type="text" id="tx-note" placeholder="বিবরণ (যেমন: চাল ২ বস্তা, নগদ জমা)">
-        
-        <label style="font-size: 0.85rem; font-weight: bold; color: #374151; display: block; margin-top: 8px;">তারিখ ও সময়:</label>
-        <input type="datetime-local" id="tx-datetime" required>
-
-        <label style="font-size: 0.85rem; font-weight: bold; color: #374151; display: block; margin-top: 8px;">রসিদ বা পণ্যের ছবি (ঐচ্ছিক):</label>
-        <div class="photo-picker-box">
-            <label class="photo-btn">
-                📷 ক্যামেরা
-                <input type="file" id="camera-input" accept="image/*" capture="environment" style="display: none;">
-            </label>
-            <label class="photo-btn">
-                🖼️ গ্যালারি
-                <input type="file" id="gallery-input" accept="image/*" style="display: none;">
-            </label>
-        </div>
-        <img id="photo-preview" alt="ছবির প্রিভিউ">
-
-        <button class="submit-btn" id="save-tx-btn">লেনদেন সেভ করুন</button>
-    </div>
-</div>
-
-<!-- ৬. বড় করে ছবি দেখার মডাল -->
-<div id="image-viewer-modal">
-    <img id="full-image" src="" alt="রসিদ">
-    <button class="submit-btn" style="max-width: 150px; background: var(--danger); margin-top: 15px;" onclick="document.getElementById('image-viewer-modal').style.display='none'">বন্ধ করুন</button>
-</div>
-
-<script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, updateProfile } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-    import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, query, where } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-
-    const firebaseConfig = {
-        apiKey: "AIzaSyDbKHSX7b6ylWKwd-wWg-stJeDrxXObsCg",
-        authDomain: "hisabpro-62.firebaseapp.com",
-        projectId: "hisabpro-62",
-        storageBucket: "hisabpro-62.firebasestorage.app",
-        messagingSenderId: "268597187789",
-        appId: "1:268597187789:web:0c0f5169f022b79ce88584",
-        measurementId: "G-0LB912KCND"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
-
-    let isRegisterMode = false;
-    let currentUser = null;
-    let shops = ['মূল দোকান (Main Shop)'];
-    let currentShop = shops[0];
-    let parties = [];
-    let transactions = [];
-    let currentTab = 'customer';
-    let selectedParty = null;
-    let currentTxType = 'due';
-    let selectedBase64Image = null;
-
-    document.getElementById('toggle-auth').addEventListener('click', () => {
-        isRegisterMode = !isRegisterMode;
-        document.getElementById('auth-title').innerText = isRegisterMode ? 'নতুন অ্যাকাউন্ট (রেজিস্ট্রেশন)' : 'হিসাব প্রো - লগইন';
-        document.getElementById('auth-name').style.display = isRegisterMode ? 'block' : 'none';
-        document.getElementById('auth-btn').innerText = isRegisterMode ? 'রেজিস্ট্রেশন করুন' : 'লগইন করুন';
-        document.getElementById('toggle-auth').innerText = isRegisterMode ? 'আগে থেকেই অ্যাকাউন্ট আছে? লগইন করুন' : 'নতুন অ্যাকাউন্ট খুলুন (রেজিস্ট্রেশন)';
-    });
-
-    function formatContactToEmail(contact) {
-        return /^01[3-9]\d{8}$/.test(contact) ? `${contact}@hisabpro.app` : contact;
-    }
-
-    document.getElementById('auth-btn').addEventListener('click', async () => {
-        const name = document.getElementById('auth-name').value.trim();
-        const rawContact = document.getElementById('auth-contact').value.trim().toLowerCase();
-        const pass = document.getElementById('auth-pass').value.trim();
-        const btn = document.getElementById('auth-btn');
-
-        if (!rawContact || pass.length < 6 || (isRegisterMode && !name)) {
-            return alert('সঠিক তথ্য এবং কমপক্ষে ৬ অক্ষরের পাসওয়ার্ড দিন!');
-        }
-
-        btn.disabled = true;
-        try {
-            const email = formatContactToEmail(rawContact);
-            if (isRegisterMode) {
-                const cred = await createUserWithEmailAndPassword(auth, email, pass);
-                await updateProfile(cred.user, { displayName: name });
-            } else {
-                await signInWithEmailAndPassword(auth, email, pass);
-            }
-        } catch (err) {
-            alert('ত্রুটি: ' + err.message);
-        } finally {
-            btn.disabled = false;
-        }
-    });
-
-    onAuthStateChanged(auth, async (user) => {
-        document.getElementById('loading').style.display = 'none';
-        if (user) {
-            currentUser = user;
-            document.getElementById('auth-screen').style.display = 'none';
-            document.getElementById('app-screen').style.display = 'block';
-            
-            const savedShops = JSON.parse(localStorage.getItem(`shops_${user.uid}`));
-            if (savedShops && savedShops.length > 0) shops = savedShops;
-            currentShop = localStorage.getItem(`current_shop_${user.uid}`) || shops[0];
-            
-            document.getElementById('user-display').innerText = `${user.displayName || 'ব্যবহারকারী'}`;
-            renderShops();
-            await loadCloudData();
-        } else {
-            currentUser = null;
-            document.getElementById('app-screen').style.display = 'none';
-            document.getElementById('auth-screen').style.display = 'flex';
-        }
-    });
-
-    document.getElementById('logout-btn').addEventListener('click', async () => {
-        if (confirm('আপনি কি লগআউট করতে চান?')) await signOut(auth);
-    });
-
-    function renderShops() {
-        const select = document.getElementById('shop-select');
-        select.innerHTML = '';
-        shops.forEach(s => {
-            const opt = document.createElement('option');
-            opt.value = s;
-            opt.innerText = s;
-            if (s === currentShop) opt.selected = true;
-            select.appendChild(opt);
-        });
-    }
-
-    document.getElementById('shop-select').addEventListener('change', (e) => {
-        currentShop = e.target.value;
-        localStorage.setItem(`current_shop_${currentUser.uid}`, currentShop);
-        updateMainUI();
-    });
-
-    document.getElementById('add-shop-btn').addEventListener('click', () => {
-        const name = prompt('নতুন দোকানের নাম লিখুন:');
-        if (name && name.trim()) {
-            const clean = name.trim();
-            if (!shops.includes(clean)) {
-                shops.push(clean);
-                localStorage.setItem(`shops_${currentUser.uid}`, JSON.stringify(shops));
-            }
-            currentShop = clean;
-            localStorage.setItem(`current_shop_${currentUser.uid}`, currentShop);
-            renderShops();
-            updateMainUI();
-        }
-    });
-
-    async function loadCloudData() {
-        try {
-            const pSnap = await getDocs(query(collection(db, "parties"), where("uid", "==", currentUser.uid)));
-            parties = [];
-            pSnap.forEach(d => parties.push({ id: d.id, ...d.data() }));
-
-            const tSnap = await getDocs(query(collection(db, "party_tx"), where("uid", "==", currentUser.uid)));
-            transactions = [];
-            tSnap.forEach(d => transactions.push({ id: d.id, ...d.data() }));
-
-            updateMainUI();
-        } catch (err) {
-            console.error(err);
-        }
-    }
-
-    document.getElementById('tab-customer').addEventListener('click', () => switchTab('customer'));
-    document.getElementById('tab-supplier').addEventListener('click', () => switchTab('supplier'));
-
-    function switchTab(tab) {
-        currentTab = tab;
-        document.getElementById('tab-customer').classList.toggle('active', tab === 'customer');
-        document.getElementById('tab-supplier').classList.toggle('active', tab === 'supplier');
-        updateMainUI();
-    }
-
-    document.getElementById('open-party-modal-btn').addEventListener('click', () => {
-        document.getElementById('party-type').value = currentTab;
-        document.getElementById('party-modal').style.display = 'flex';
-    });
-
-    document.getElementById('close-party-modal').addEventListener('click', () => {
-        document.getElementById('party-modal').style.display = 'none';
-    });
-
-    document.getElementById('save-party-btn').addEventListener('click', async () => {
-        const type = document.getElementById('party-type').value;
-        const name = document.getElementById('party-name').value.trim();
-        const phone = document.getElementById('party-phone').value.trim();
-        const btn = document.getElementById('save-party-btn');
-
-        if (!name) return alert('নাম লিখুন!');
-        btn.disabled = true;
-
-        try {
-            const newParty = { uid: currentUser.uid, shop: currentShop, type, name, phone: phone || 'নাম্বার নেই', createdAt: Date.now() };
-            const docRef = await addDoc(collection(db, "parties"), newParty);
-            parties.unshift({ id: docRef.id, ...newParty });
-            
-            document.getElementById('party-name').value = '';
-            document.getElementById('party-phone').value = '';
-            document.getElementById('party-modal').style.display = 'none';
-            switchTab(type);
-        } catch (err) {
-            alert('সমস্যা হয়েছে: ' + err.message);
-        } finally {
-            btn.disabled = false;
-        }
-    });
-
-    function getPartyBalance(partyId) {
-        let bal = 0;
-        transactions.filter(t => t.partyId === partyId).forEach(t => {
-            if (t.type === 'due') bal += t.amount;
-            else bal -= t.amount;
-        });
-        return bal;
-    }
-
-    function updateMainUI() {
-        const list = document.getElementById('party-list');
-        list.innerHTML = '';
-
-        const shopParties = parties.filter(p => p.shop === currentShop);
-        let totCust = 0, totSupp = 0;
-
-        shopParties.forEach(p => {
-            const b = getPartyBalance(p.id);
-            if (p.type === 'customer') totCust += b;
-            else totSupp += b;
-        });
-
-        document.getElementById('total-customer').innerText = `৳ ${totCust}`;
-        document.getElementById('total-supplier').innerText = `৳ ${totSupp}`;
-
-        const filtered = shopParties.filter(p => p.type === currentTab);
-        if (filtered.length === 0) {
-            list.innerHTML = `<div class="empty-msg">কোনো ${currentTab === 'customer' ? 'কাস্টমার' : 'সাপ্লায়ার'} নেই। নিচের <strong>+</strong> বাটনে চাপ দিয়ে যুক্ত করুন।</div>`;
-            return;
-        }
-
-        filtered.forEach(p => {
-            const bal = getPartyBalance(p.id);
-            const li = document.createElement('li');
-            li.className = `item ${p.type}`;
-            li.onclick = () => openLedger(p);
-            li.innerHTML = `
-                <div class="item-info">
-                    <h4>${p.name}</h4>
-                    <small>📞 ${p.phone}</small>
-                </div>
-                <div class="item-amount">
-                    <span style="color: ${p.type === 'customer' ? 'var(--customer)' : 'var(--supplier)'};">৳ ${bal}</span>
-                    <small>খাতা দেখুন ›</small>
-                </div>
-            `;
-            list.appendChild(li);
-        });
-    }
-
-    function openLedger(party) {
-        selectedParty = party;
-        document.getElementById('main-view').style.display = 'none';
-        document.getElementById('ledger-view').style.display = 'block';
-
-        document.getElementById('ledger-name').innerText = party.name;
-        document.getElementById('ledger-phone').innerText = `📞 ${party.phone}`;
-
-        if (party.type === 'customer') {
-            document.getElementById('btn-add-due').innerText = '+ বাকি দিলাম';
-            document.getElementById('btn-add-paid').innerText = '+ জমা পেলাম';
-            document.getElementById('ledger-status-label').innerText = 'মোট পাবো (বাকি)';
-        } else {
-            document.getElementById('btn-add-due').innerText = '+ বাকি নিলাম';
-            document.getElementById('btn-add-paid').innerText = '+ পরিশোধ করলাম';
-            document.getElementById('ledger-status-label').innerText = 'মোট দেবো (দেনা)';
-        }
-        renderLedgerTxs();
-    }
-
-    document.getElementById('close-ledger-btn').addEventListener('click', () => {
-        selectedParty = null;
-        document.getElementById('ledger-view').style.display = 'none';
-        document.getElementById('main-view').style.display = 'block';
-        updateMainUI();
-    });
-
-    document.getElementById('delete-party-btn').addEventListener('click', async () => {
-        if (confirm('এই খাতাটি স্থায়ীভাবে মুছে ফেলতে চান?')) {
-            await deleteDoc(doc(db, "parties", selectedParty.id));
-            parties = parties.filter(p => p.id !== selectedParty.id);
-            document.getElementById('close-ledger-btn').click();
-        }
-    });
-
-    function handleImageSelect(event) {
-        const file = event.target.files[0];
-        if (!file) return;
-
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const img = new Image();
-            img.onload = function() {
-                const canvas = document.createElement('canvas');
-                const maxWidth = 600;
-                const scale = maxWidth / img.width;
-                canvas.width = maxWidth;
-                canvas.height = img.height * scale;
-
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                
-                selectedBase64Image = canvas.toDataURL('image/jpeg', 0.6);
-                const preview = document.getElementById('photo-preview');
-                preview.src = selectedBase64Image;
-                preview.style.display = 'block';
-            };
-            img.src = e.target.result;
-        };
-        reader.readAsDataURL(file);
-    }
-
-    document.getElementById('camera-input').addEventListener('change', handleImageSelect);
-    document.getElementById('gallery-input').addEventListener('change', handleImageSelect);
-
-    function openTxModal(type) {
-        currentTxType = type;
-        selectedBase64Image = null;
-        document.getElementById('photo-preview').style.display = 'none';
-        document.getElementById('camera-input').value = '';
-        document.getElementById('gallery-input').value = '';
-
-        const now = new Date();
-        now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-        document.getElementById('tx-datetime').value = now.toISOString().slice(0, 16);
-
-        const title = selectedParty.type === 'customer'
-            ? (type === 'due' ? 'কাস্টমারকে বাকি দিন' : 'কাস্টমার থেকে জমা নিন')
-            : (type === 'due' ? 'সাপ্লায়ার থেকে বাকি নিন' : 'সাপ্লায়ারকে পরিশোধ করুন');
-        document.getElementById('tx-modal-title').innerText = title;
-        document.getElementById('tx-modal').style.display = 'flex';
-    }
-
-    document.getElementById('btn-add-due').addEventListener('click', () => openTxModal('due'));
-    document.getElementById('btn-add-paid').addEventListener('click', () => openTxModal('paid'));
-    document.getElementById('close-tx-modal').addEventListener('click', () => {
-        document.getElementById('tx-modal').style.display = 'none';
-    });
-
-    document.getElementById('save-tx-btn').addEventListener('click', async () => {
-        const amount = parseFloat(document.getElementById('tx-amount').value);
-        const note = document.getElementById('tx-note').value.trim();
-        const rawDateTime = document.getElementById('tx-datetime').value;
-        const btn = document.getElementById('save-tx-btn');
-
-        if (isNaN(amount) || amount <= 0 || !rawDateTime) {
-            return alert('সঠিক টাকার পরিমাণ এবং তারিখ-সময় দিন!');
-        }
-
-        btn.disabled = true;
-        btn.innerText = 'ক্লাউডে সেভ হচ্ছে...';
-
-        try {
-            const formattedDate = new Date(rawDateTime).toLocaleString('bn-BD', {
-                year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
-            });
-
-            const newTx = {
-                uid: currentUser.uid,
-                partyId: selectedParty.id,
-                type: currentTxType,
-                amount,
-                note,
-                dateTime: formattedDate,
-                timestamp: new Date(rawDateTime).getTime(),
-                image: selectedBase64Image || null
-            };
-
-            const docRef = await addDoc(collection(db, "party_tx"), newTx);
-            transactions.unshift({ id: docRef.id, ...newTx });
-
-            document.getElementById('tx-amount').value = '';
-            document.getElementById('tx-note').value = '';
-            document.getElementById('tx-modal').style.display = 'none';
-            renderLedgerTxs();
-        } catch (err) {
-            alert('সেভ করতে সমস্যা হয়েছে: ' + err.message);
-        } finally {
-            btn.disabled = false;
-            btn.innerText = 'লেনদেন সেভ করুন';
-        }
-    });
-
-    window.viewFullImage = function(base64) {
-        document.getElementById('full-image').src = base64;
-        document.getElementById('image-viewer-modal').style.display = 'flex';
-    };
-
-    function renderLedgerTxs() {
-        const bal = getPartyBalance(selectedParty.id);
-        const balEl = document.getElementById('ledger-balance');
-        balEl.innerText = `৳ ${bal}`;
-        balEl.style.color = selectedParty.type === 'customer' ? 'var(--customer)' : 'var(--supplier)';
-
-        const list = document.getElementById('tx-list');
-        list.innerHTML = '';
-
-        const partyTxs = transactions
-            .filter(t => t.partyId === selectedParty.id)
-            .sort((a, b) => b.timestamp - a.timestamp);
-
-        if (partyTxs.length === 0) {
-            list.innerHTML = `<div class="empty-msg">এখনো কোনো লেনদেন হয়নি। ওপরের বাটন থেকে যুক্ত করুন।</div>`;
-            return;
-        }
-
-        partyTxs.forEach(tx => {
-            const isDue = tx.type === 'due';
-            const label = selectedParty.type === 'customer'
-                ? (isDue ? 'বাকি দেওয়া হয়েছে' : 'জমা পাওয়া গেছে')
-                : (isDue ? 'বাকি নেওয়া হয়েছে' : 'পরিশোধ করা হয়েছে');
-
-            const imgHtml = tx.image ? `<br><img src="${tx.image}" class="tx-thumb" onclick="viewFullImage('${tx.image}')" title="বড় করে দেখতে ক্লিক করুন">` : '';
-
-            const li = document.createElement('li');
-            li.className = 'tx-item';
-            li.innerHTML = `
-                <div>
-                    <strong>${tx.note || label}</strong><br>
-                    <small style="color: #6b7280;">🕒 ${tx.dateTime}</small>
-                    ${imgHtml}
-                </div>
-                <div style="text-align: right;">
-                    <strong style="color: ${isDue ? 'var(--danger)' : 'var(--customer)'}; font-size: 1.05rem;">
-                        ${isDue ? '+' : '-'} ৳${tx.amount}
-                    </strong>
-                </div>
-            `;
-            list.appendChild(li);
-        });
-    }
-
-    if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-            navigator.serviceWorker.register('./sw.js').catch(err => console.log('SW Error:', err));
-        });
-    }
+<header>
+ <div class="top"><div class="brand"><img src="./icon-192.png" alt="Hisab Pro logo"><div><b>Hisab Pro</b><small>আপনার নির্ভরযোগ্য হিসাব খাতা</small></div></div>
+ <div class="head-actions"><button id="backupTop">ব্যাকআপ</button><button id="settingsTop">⚙</button></div></div>
+ <div class="modebar"><button id="shopMode" class="active">🏪 দোকান হিসাব</button><button id="homeMode">🏠 পারিবারিক হিসাব</button></div>
+</header>
+<main>
+<section id="homePage">
+ <div class="balances"><div class="balance"><small>মোট পাবো</small><strong class="red" id="totalReceivable">৳ ০</strong></div><div class="balance"><small>মোট দেবো</small><strong class="green" id="totalPayable">৳ ০</strong></div></div>
+ <div class="searchrow"><input id="search" class="field" placeholder="নাম বা মোবাইল দিয়ে খুঁজুন"><button class="btn light" id="reportQuick">রিপোর্ট</button></div>
+ <div class="filters"><button class="active" data-filter="all">সবাই</button><button data-filter="customer">কাস্টমার</button><button data-filter="supplier">সাপ্লায়ার</button></div>
+ <div id="partyList" class="list"></div>
+</section>
+<section id="ledgerPage" class="hidden">
+ <button class="back" id="backHome">← তালিকায় ফিরুন</button>
+ <div class="panel"><div class="row"><div><h2 id="ledgerName" style="margin:0">নাম</h2><small id="ledgerPhone"></small></div><div style="text-align:right"><small id="ledgerType">বর্তমান ব্যালেন্স</small><h2 id="ledgerBalance" style="margin:3px 0">৳ ০</h2></div></div>
+ <div class="btnline" style="margin-top:12px"><button class="btn light" id="editParty">তথ্য সংশোধন</button><button class="btn redbtn" id="deleteParty">খাতা মুছুন</button></div>
+ <div class="btnline" style="margin-top:8px"><button class="btn" id="waBtn">WhatsApp তাগাদা</button><button class="btn greenbtn" id="smsBtn">SMS তাগাদা</button></div></div>
+ <div class="panel"><h3 style="margin:0 0 12px">নতুন লেনদেন</h3>
+  <div class="entrygrid"><div class="entry"><label>৳ দিলাম / বাকি (পাবো)</label><input id="giveAmount" type="number" inputmode="decimal" placeholder="০"></div><div class="entry in"><label>৳ পেলাম / জমা</label><input id="receiveAmount" type="number" inputmode="decimal" placeholder="০"></div></div>
+  <input class="field full" id="txDate" type="date"><textarea class="field" id="txNote" placeholder="বিবরণ লিখুন..." style="width:100%;margin-top:5px"></textarea>
+  <div class="row" style="margin-top:7px"><small>ক্যালকুলেটর দিয়ে অঙ্ক করে ঘরে বসান</small><select id="calcTarget" class="field" style="width:auto;padding:7px"><option value="giveAmount">দিলাম ঘর</option><option value="receiveAmount">পেলাম ঘর</option></select></div>
+  <div class="keypad" id="keypad"><button data-k="7">7</button><button data-k="8">8</button><button data-k="9">9</button><button class="op" data-k="÷">÷</button><button data-k="4">4</button><button data-k="5">5</button><button data-k="6">6</button><button class="op" data-k="×">×</button><button data-k="1">1</button><button data-k="2">2</button><button data-k="3">3</button><button class="op" data-k="-">−</button><button data-k="0">0</button><button data-k=".">.</button><button data-k="⌫">⌫</button><button class="op" data-k="+">+</button><button data-k="C">C</button><button data-k="(">(</button><button data-k=")">)</button><button class="enter" data-k="=">= বসান</button></div>
+  <button class="btn" style="width:100%;margin-top:12px" id="saveTx">লেনদেন সেভ করুন</button>
+ </div>
+ <div class="panel"><h3 style="margin:0 0 5px">লেনদেনের ইতিহাস</h3><div id="txList"></div></div>
+</section>
+<section id="reportPage" class="hidden"><div class="row"><h2>রিপোর্ট</h2><button class="back" id="reportBack">← ফিরে যান</button></div><div class="panel"><label>খাতভিত্তিক রিপোর্ট</label><select class="field full" id="reportParty"><option value="all">সব খাতা</option></select><div class="row"><label>শুরুর তারিখ</label><input class="field" type="date" id="fromDate"></div><div class="row"><label>শেষ তারিখ</label><input class="field" type="date" id="toDate"></div><button class="btn" style="width:100%" id="runReport">রিপোর্ট দেখুন</button></div><div class="panel" id="reportResult"></div></section>
+<section id="cashPage" class="hidden"><div class="row"><h2>দৈনিক ক্যাশ খাতা</h2><button class="back" id="cashBack">← ফিরে যান</button></div><div class="panel"><label>তারিখ</label><input class="field full" type="date" id="cashDate"><label>দিনের শুরুতে ক্যাশ</label><input class="field full" type="number" id="cashOpen" placeholder="৳"><label>নগদ আয়</label><input class="field full" type="number" id="cashIn" placeholder="৳"><label>নগদ খরচ</label><input class="field full" type="number" id="cashOut" placeholder="৳"><label>দিন শেষে হাতে গোনা ক্যাশ</label><input class="field full" type="number" id="cashCount" placeholder="৳"><button class="btn" style="width:100%" id="saveCash">ক্যাশ হিসাব সেভ</button><h3 id="cashDiff"></h3></div><div id="cashHistory" class="panel"></div></section>
+<section id="settingsPage" class="hidden"><div class="row"><h2>সেটিংস ও ডেটা</h2><button class="back" id="settingsBack">← ফিরে যান</button></div><div class="panel"><p>ডেটা এই ডিভাইসের ব্রাউজারে অফলাইনে সংরক্ষিত হয়। নিয়মিত ব্যাকআপ ফাইল ডাউনলোড করে নিরাপদ স্থানে রাখুন।</p><div class="btnline"><button class="btn" id="exportBtn">JSON ব্যাকআপ</button><button class="btn light" id="csvBtn">CSV এক্সপোর্ট</button></div><label style="display:block;margin-top:14px">ব্যাকআপ ফাইল থেকে রিস্টোর</label><input type="file" id="restoreFile" accept=".json,application/json" class="field full"><button class="btn redbtn" id="clearBtn" style="width:100%;margin-top:12px">সব ডেটা মুছুন</button></div><div class="panel"><b>অ্যাপ সম্পর্কে</b><p>Hisab Pro · Offline PWA</p><small>ইন্টারনেট ছাড়াই হিসাব লেখা যাবে। অনলাইন সিঙ্ক বা স্বয়ংক্রিয় ক্লাউড ব্যাকআপ এই সংস্করণে নেই।</small></div></section>
+</main>
+<button class="fab" id="addParty" aria-label="নতুন খাতা">+</button>
+<nav class="nav"><button class="active" data-page="homePage"><span>⌂</span>হোম</button><button data-page="reportPage"><span>▤</span>রিপোর্ট</button><button data-page="cashPage"><span>▣</span>ক্যাশ</button><button data-page="settingsPage"><span>⚙</span>সেটিংস</button></nav>
+<div class="modal hidden" id="partyModal"><div class="modalbox"><div class="row"><h3 id="partyModalTitle">নতুন খাতা</h3><button class="back" data-close="partyModal">✕</button></div><label>ধরন</label><select id="partyType"><option value="customer">কাস্টমার — পাবো</option><option value="supplier">সাপ্লায়ার — দেবো</option></select><label>নাম</label><input id="partyName" placeholder="নাম লিখুন"><label>মোবাইল নম্বর</label><input id="partyPhone" type="tel" placeholder="01XXXXXXXXX"><button class="btn" style="width:100%" id="saveParty">সেভ করুন</button></div></div>
+<div class="toast" id="toast"></div>
+<script>
+(()=>{'use strict';
+const $=id=>document.getElementById(id),KEY='hisabpro_offline_v1';
+let db=load(),mode='shop',filter='all',selected=null,editingParty=null,calcExpr='';
+function blank(){return {parties:[],txs:[],cash:[]}}
+function load(){try{return JSON.parse(localStorage.getItem(KEY))||blank()}catch(e){return blank()}}
+function persist(){localStorage.setItem(KEY,JSON.stringify(db))}
+function money(n){return '৳ '+Number(n||0).toLocaleString('bn-BD',{maximumFractionDigits:2})}
+function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function balance(p){return db.txs.filter(t=>t.partyId===p.id&&t.mode===mode).reduce((v,t)=>v+(p.type==='customer'?(+t.give||0)-(+t.receive||0):(+t.give||0)-(+t.receive||0)),0)}
+function showToast(s){$('toast').textContent=s;$('toast').style.display='block';setTimeout(()=>$('toast').style.display='none',2200)}
+function page(id){['homePage','ledgerPage','reportPage','cashPage','settingsPage'].forEach(x=>$(x).classList.toggle('hidden',x!==id));$('addParty').classList.toggle('hidden',id!=='homePage');document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active',b.dataset.page===id))}
+function render(){const ps=db.parties.filter(p=>p.mode===mode);let recv=0,pay=0;ps.forEach(p=>{const b=balance(p);if(p.type==='customer')recv+=b;else pay+=b});$('totalReceivable').textContent=money(recv);$('totalPayable').textContent=money(pay);
+const q=$('search').value.trim().toLowerCase();const arr=ps.filter(p=>(filter==='all'||p.type===filter)&&(!q||(p.name+' '+p.phone).toLowerCase().includes(q)));
+$('partyList').innerHTML=arr.length?arr.map(p=>{let b=balance(p);return `<div class="party" data-id="${p.id}"><div class="avatar">${esc(p.name.slice(0,1))}</div><div class="pinfo"><b>${esc(p.name)}</b><small>${esc(p.phone||'মোবাইল নেই')} · ${p.type==='customer'?'কাস্টমার':'সাপ্লায়ার'}</small></div><div class="amount ${p.type==='customer'?'red':'green'}">${money(Math.abs(b))}<small>${b>0?(p.type==='customer'?'পাবো':'দেবো'):(b<0?'অগ্রিম':'সমান')}</small></div></div>`}).join(''):'<div class="empty">কোনো খাতা পাওয়া যায়নি। + চাপ দিয়ে নতুন খাতা যোগ করুন।</div>';
+$('partyList').querySelectorAll('[data-id]').forEach(el=>el.onclick=()=>openLedger(el.dataset.id));populateReportSelect()}
+function openLedger(id){selected=db.parties.find(p=>p.id===id);if(!selected)return;page('ledgerPage');renderLedger()}
+function renderLedger(){let p=selected,b=balance(p);$('ledgerName').textContent=p.name;$('ledgerPhone').textContent=p.phone||'মোবাইল নেই';$('ledgerType').textContent=p.type==='customer'?'মোট পাবো':'মোট দেবো';$('ledgerBalance').textContent=money(Math.abs(b));$('ledgerBalance').className=b<0?'green':'red';
+let tx=db.txs.filter(t=>t.partyId===p.id&&t.mode===mode).sort((a,b)=>b.date.localeCompare(a.date));$('txList').innerHTML=tx.length?tx.map(t=>`<div class="tx"><div class="row"><b>${t.give?'<span class="red">দিলাম '+money(t.give)+'</span>':''} ${t.receive?'<span class="green">পেলাম '+money(t.receive)+'</span>':''}</b><small>${esc(t.date)}</small></div><div class="row"><small>${esc(t.note||'বিবরণ নেই')}</small><div class="tx-actions"><button data-edit-tx="${t.id}">এডিট</button><button data-del-tx="${t.id}">ডিলিট</button></div></div></div>`).join(''):'<div class="empty">এখনো কোনো লেনদেন নেই।</div>';
+$('txList').querySelectorAll('[data-edit-tx]').forEach(b=>b.onclick=()=>editTx(b.dataset.editTx));$('txList').querySelectorAll('[data-del-tx]').forEach(b=>b.onclick=()=>deleteTx(b.dataset.delTx))}
+function openParty(edit){editingParty=edit||null;$('partyModalTitle').textContent=edit?'খাতার তথ্য সংশোধন':'নতুন খাতা';$('partyType').value=edit?.type||'customer';$('partyName').value=edit?.name||'';$('partyPhone').value=edit?.phone||'';$('partyType').disabled=!!edit;$('partyModal').classList.remove('hidden')}
+function saveParty(){let name=$('partyName').value.trim();if(!name)return showToast('নাম লিখুন');let data={name,phone:$('partyPhone').value.trim(),type:$('partyType').value,mode};if(editingParty)Object.assign(editingParty,data);else db.parties.unshift({id:crypto.randomUUID(),...data,created:Date.now()});persist();$('partyModal').classList.add('hidden');render();if(editingParty){selected=editingParty;renderLedger()}editingParty=null}
+function saveTx(){let give=+$('giveAmount').value||0,receive=+$('receiveAmount').value||0;if(!give&&!receive)return showToast('টাকার পরিমাণ লিখুন');if(give&&receive)return showToast('দিলাম অথবা পেলাম—একটি ঘর পূরণ করুন');db.txs.push({id:crypto.randomUUID(),partyId:selected.id,mode,give,receive,date:$('txDate').value||today(),note:$('txNote').value.trim()});persist();$('giveAmount').value='';$('receiveAmount').value='';$('txNote').value='';render();renderLedger();showToast('লেনদেন সেভ হয়েছে')}
+function today(){let d=new Date();return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10)}
+function editTx(id){let t=db.txs.find(x=>x.id===id);let g=prompt('দিলাম / বাকি টাকার পরিমাণ',t.give||'');if(g===null)return;let r=prompt('পেলাম / জমা টাকার পরিমাণ',t.receive||'');if(r===null)return;let n=prompt('বিবরণ',t.note||'');if(n===null)return;t.give=+g||0;t.receive=+r||0;t.note=n;persist();render();renderLedger()}
+function deleteTx(id){if(!confirm('এই লেনদেনটি মুছে ফেলবেন?'))return;db.txs=db.txs.filter(t=>t.id!==id);persist();render();renderLedger()}
+function reminder(){let p=selected,b=balance(p),amt=money(Math.abs(b));let msg=`প্রিয় ${p.name}, আপনার কাছে আমাদের ${amt} টাকা ${p.type==='customer'?'পাওনা':'দেনা'} রয়েছে। অনুগ্রহ করে হিসাবটি মিলিয়ে নেবেন। ধন্যবাদ।`;return msg}
+function send(kind){if(!selected.phone)return showToast('এই খাতায় মোবাইল নম্বর নেই');let phone=selected.phone.replace(/\D/g,'');if(phone.startsWith('0'))phone='88'+phone;let url=kind==='wa'?`https://wa.me/${phone}?text=${encodeURIComponent(reminder())}`:`sms:${selected.phone}?body=${encodeURIComponent(reminder())}`;location.href=url}
+function populateReportSelect(){let old=$('reportParty').value;let opts='<option value="all">সব খাতা</option>'+db.parties.filter(p=>p.mode===mode).map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join('');$('reportParty').innerHTML=opts;$('reportParty').value=[...$('reportParty').options].some(o=>o.value===old)?old:'all'}
+function runReport(){let id=$('reportParty').value,from=$('fromDate').value,to=$('toDate').value;let tx=db.txs.filter(t=>t.mode===mode&&(!from||t.date>=from)&&(!to||t.date<=to)&&(id==='all'||t.partyId===id));let g=tx.reduce((s,t)=>s+t.give,0),r=tx.reduce((s,t)=>s+t.receive,0);$('reportResult').innerHTML=`<h3>রিপোর্ট সারাংশ</h3><p>মোট দিলাম / বাকি: <b class="red">${money(g)}</b></p><p>মোট পেলাম / জমা: <b class="green">${money(r)}</b></p><p>লেনদেন সংখ্যা: ${tx.length}</p><hr>${tx.map(t=>{let p=db.parties.find(x=>x.id===t.partyId);return `<p>${esc(p?.name||'মুছে ফেলা খাতা')} · ${t.date}<br>${esc(t.note)} — ${money(t.give||t.receive)}</p>`}).join('')}`}
+function exportJSON(){let blob=new Blob([JSON.stringify({version:1,exported:new Date().toISOString(),data:db},null,2)],{type:'application/json'});download(blob,'hisab-pro-backup-'+today()+'.json')}
+function download(blob,name){let a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
+function exportCSV(){let rows=[['নাম','ধরন','মোড','তারিখ','দিলাম','পেলাম','বিবরণ'],...db.txs.map(t=>{let p=db.parties.find(p=>p.id===t.partyId)||{};return[p.name,p.type,t.mode,t.date,t.give,t.receive,t.note]})];let csv='\ufeff'+rows.map(r=>r.map(x=>'"'+String(x??'').replace(/"/g,'""')+'"').join(',')).join('\n');download(new Blob([csv],{type:'text/csv;charset=utf-8'}),'hisab-pro.csv')}
+function restore(file){let r=new FileReader();r.onload=()=>{try{let x=JSON.parse(r.result),d=x.data||x;if(!Array.isArray(d.parties)||!Array.isArray(d.txs))throw Error();if(!confirm('বর্তমান ডেটার জায়গায় ব্যাকআপের ডেটা বসাবেন?'))return;db={parties:d.parties,txs:d.txs,cash:d.cash||[]};persist();render();showToast('রিস্টোর সম্পন্ন')}catch(e){showToast('ব্যাকআপ ফাইলটি সঠিক নয়')}};r.readAsText(file)}
+function calc(){let target=$( $('calcTarget').value),v=calcExpr.replace(/×/g,'*').replace(/÷/g,'/');try{if(!/^[0-9+\-*/().\s]+$/.test(v)||!v.trim())throw 0;let result=Function('"use strict";return ('+v+')')();if(!Number.isFinite(result))throw 0;target.value=String(Math.round(result*100)/100);calcExpr='';}catch(e){showToast('সঠিক অঙ্ক লিখুন')}}
+function saveCash(){let item={date:$('cashDate').value||today(),open:+$('cashOpen').value||0,income:+$('cashIn').value||0,out:+$('cashOut').value||0,count:+$('cashCount').value||0,mode};let expected=item.open+item.income-item.out;item.diff=item.count-expected;let i=db.cash.findIndex(x=>x.date===item.date&&x.mode===mode);if(i>=0)db.cash[i]=item;else db.cash.push(item);persist();$('cashDiff').textContent='হিসাব অনুযায়ী ক্যাশ: '+money(expected)+' · পার্থক্য: '+money(item.diff);renderCash();showToast('ক্যাশ হিসাব সেভ হয়েছে')}
+function renderCash(){let arr=db.cash.filter(x=>x.mode===mode).sort((a,b)=>b.date.localeCompare(a.date));$('cashHistory').innerHTML='<h3>আগের দিনের হিসাব</h3>'+(arr.map(x=>`<p>${x.date} · হাতে গোনা ${money(x.count)} · পার্থক্য ${money(x.diff)}</p>`).join('')||'কোনো হিসাব নেই')}
+function setMode(m){mode=m;$('shopMode').classList.toggle('active',m==='shop');$('homeMode').classList.toggle('active',m==='home');selected=null;page('homePage');render();renderCash()}
+$('shopMode').onclick=()=>setMode('shop');$('homeMode').onclick=()=>setMode('home');
+document.querySelectorAll('[data-filter]').forEach(b=>b.onclick=()=>{filter=b.dataset.filter;document.querySelectorAll('[data-filter]').forEach(x=>x.classList.toggle('active',x===b));render()});
+$('search').oninput=render;$('addParty').onclick=()=>openParty();$('saveParty').onclick=saveParty;document.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>$('partyModal').classList.add('hidden'));
+$('backHome').onclick=()=>{page('homePage');selected=null;render()};$('editParty').onclick=()=>openParty(selected);$('deleteParty').onclick=()=>{if(confirm('এই খাতা এবং এর সব লেনদেন মুছবেন?')){db.parties=db.parties.filter(p=>p.id!==selected.id);db.txs=db.txs.filter(t=>t.partyId!==selected.id);persist();page('homePage');render()}};$('saveTx').onclick=saveTx;$('waBtn').onclick=()=>send('wa');$('smsBtn').onclick=()=>send('sms');
+$('keypad').onclick=e=>{let k=e.target.dataset.k;if(!k)return;let target=$($('calcTarget').value);if(k==='='){calc();return}if(k==='C')calcExpr='';else if(k==='⌫')calcExpr=calcExpr.slice(0,-1);else calcExpr+=k;target.value=calcExpr};
+document.querySelectorAll('.nav button').forEach(b=>b.onclick=()=>{page(b.dataset.page);if(b.dataset.page==='reportPage')populateReportSelect();if(b.dataset.page==='cashPage')renderCash()});
+$('reportQuick').onclick=()=>{page('reportPage');populateReportSelect()};$('reportBack').onclick=()=>page('homePage');$('runReport').onclick=runReport;$('cashBack').onclick=()=>page('homePage');$('settingsBack').onclick=()=>page('homePage');
+$('cashDate').value=today();$('txDate').value=today();$('saveCash').onclick=saveCash;
+$('exportBtn').onclick=exportJSON;$('backupTop').onclick=exportJSON;$('csvBtn').onclick=exportCSV;$('restoreFile').onchange=e=>{if(e.target.files[0])restore(e.target.files[0]);e.target.value=''};$('clearBtn').onclick=()=>{if(confirm('সতর্কতা: সব খাতা, লেনদেন ও ক্যাশ হিসাব স্থায়ীভাবে মুছে যাবে। চালিয়ে যাবেন?')){db=blank();persist();render();renderCash();showToast('ডেটা মুছে ফেলা হয়েছে')}};
+$('settingsTop').onclick=()=>page('settingsPage');
+render();renderCash();
+if('serviceWorker'in navigator&&location.protocol!=='file:')window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
+})();
 </script>
-
-</body>
-</html>
+</body></html>
