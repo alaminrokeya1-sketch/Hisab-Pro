@@ -8,175 +8,416 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <title>Hisab Pro - হিসাব প্রো</title>
   <link rel="manifest" href="manifest.json" />
-  <link href="https://googleapis.com" rel="stylesheet">
-  <script src="https://tailwindcss.com"></script>
   <style>
-    * { 
-      font-family: 'Noto Sans Bengali', system-ui, -apple-system, sans-serif; 
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, 'Noto Sans Bengali', Roboto, sans-serif;
       -webkit-tap-highlight-color: transparent;
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
     }
-    body { background-color: #e5e7eb; margin: 0; padding: 0; overscroll-behavior-y: contain; }
-    .app-shell { max-width: 480px; margin: 0 auto; min-height: 100vh; background: #f8fafc; position: relative; padding-bottom: 76px; box-shadow: 0 0 25px rgba(0,0,0,0.08); }
-    .header-bg { background: linear-gradient(135deg, #0f4c3a 0%, #16654e 100%); }
-    .calc-btn { transition: transform 0.06s, background-color 0.1s; user-select: none; }
-    .calc-btn:active { transform: scale(0.95); background-color: #e2e8f0; }
-  </style>
-</head>
-<body>
-
-<div class="app-shell" id="app">
-  <!-- Top Mode Switcher Bar -->
-  <div class="header-bg text-white px-4 pt-3 pb-2 flex items-center justify-between sticky top-0 z-30">
-    <div class="flex items-center gap-2">
-      <div class="w-8 h-8 rounded-lg bg-white/15 flex items-center justify-center border border-white/25">
-        <svg class="w-5 h-5 text-emerald-300" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-        </svg>
-      </div>
-      <span class="font-bold text-lg tracking-wide">Hisab Pro</span>
-    </div>
-    <div class="bg-black/25 p-1 rounded-full flex text-xs font-semibold">
-      <button onclick="switchMode('shop')" id="modeBtnShop" class="px-3 py-1 rounded-full bg-white text-emerald-900 transition">দোকান</button>
-      <button onclick="switchMode('personal')" id="modeBtnPersonal" class="px-3 py-1 rounded-full text-white/90 transition">ব্যক্তিগত</button>
-    </div>
-  </div>
-
-  <!-- Dynamic Main Content -->
-  <div id="mainContent"></div>
-
-  <!-- Bottom Navigation -->
-  <nav class="fixed bottom-0 left-0 right-0 max-w-[480px] mx-auto bg-white border-t border-slate-200 flex justify-around py-2 z-30 shadow-lg">
-    <button onclick="navigate('home')" class="nav-item flex flex-col items-center text-emerald-800 font-semibold text-xs" data-tab="home">
-      <svg class="w-6 h-6 mb-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
-      <span>হোম</span>
-    </button>
-    <button onclick="navigate('cashbox')" id="navCashbox" class="nav-item flex flex-col items-center text-slate-500 font-medium text-xs" data-tab="cashbox">
-      <svg class="w-6 h-6 mb-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
-      <span>ক্যাশবাক্স</span>
-    </button>
-    <button onclick="navigate('reports')" class="nav-item flex flex-col items-center text-slate-500 font-medium text-xs" data-tab="reports">
-      <svg class="w-6 h-6 mb-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
-      <span>রিপোর্ট</span>
-    </button>
-  </nav>
-</div>
-
-<!-- In-App Calculator Drawer Modal -->
-<div id="calcModal" class="fixed inset-0 bg-black/50 z-50 hidden flex-col justify-end max-w-[480px] mx-auto">
-  <div class="bg-white rounded-t-2xl p-4 shadow-2xl">
-    <div class="flex justify-between items-center mb-2">
-      <span id="calcTitle" class="font-bold text-slate-800 text-base">লেনদেন যোগ করুন</span>
-      <button onclick="closeCalc()" class="text-slate-400 hover:text-slate-700 text-2xl font-bold px-2">&times;</button>
-    </div>
-
-    <div class="grid grid-cols-2 gap-2 mb-2">
-      <input type="text" id="calcNote" placeholder="বিবরণ লিখুন (যেমন: নগদ / বাকি)" class="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-emerald-700" />
-      <input type="date" id="calcDate" class="border border-slate-300 rounded-lg px-2 py-2 text-sm focus:outline-none focus:border-emerald-700" />
-    </div>
-
-    <div id="calcCategoryWrap" class="mb-2 hidden">
-      <select id="calcCategory" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm bg-white"></select>
-    </div>
-
-    <div class="bg-slate-100 border border-slate-300 rounded-xl px-3 py-2.5 mb-3 flex justify-between items-center">
-      <span class="text-xs text-slate-500 font-medium" id="calcExpr">0</span>
-      <span class="text-2xl font-bold text-emerald-900">৳ <span id="calcDisplay">0</span></span>
-    </div>
-
-    <div class="grid grid-cols-4 gap-2 mb-3 text-lg font-bold text-slate-800">
-      <button onclick="pressCalc('7')" class="calc-btn bg-slate-100 py-3 rounded-xl">7</button>
-      <button onclick="pressCalc('8')" class="calc-btn bg-slate-100 py-3 rounded-xl">8</button>
-      <button onclick="pressCalc('9')" class="calc-btn bg-slate-100 py-3 rounded-xl">9</button>
-      <button onclick="pressCalc('C')" class="calc-btn bg-rose-100 text-rose-700 py-3 rounded-xl">C</button>
-
-      <button onclick="pressCalc('4')" class="calc-btn bg-slate-100 py-3 rounded-xl">4</button>
-      <button onclick="pressCalc('5')" class="calc-btn bg-slate-100 py-3 rounded-xl">5</button>
-      <button onclick="pressCalc('6')" class="calc-btn bg-slate-100 py-3 rounded-xl">6</button>
-      <button onclick="pressCalc('+')" class="calc-btn bg-emerald-100 text-emerald-800 py-3 rounded-xl">+</button>
-
-      <button onclick="pressCalc('1')" class="calc-btn bg-slate-100 py-3 rounded-xl">1</button>
-      <button onclick="pressCalc('2')" class="calc-btn bg-slate-100 py-3 rounded-xl">2</button>
-      <button onclick="pressCalc('3')" class="calc-btn bg-slate-100 py-3 rounded-xl">3</button>
-      <button onclick="pressCalc('-')" class="calc-btn bg-emerald-100 text-emerald-800 py-3 rounded-xl">-</button>
-
-      <button onclick="pressCalc('0')" class="calc-btn bg-slate-100 py-3 rounded-xl">0</button>
-      <button onclick="pressCalc('00')" class="calc-btn bg-slate-100 py-3 rounded-xl">00</button>
-      <button onclick="pressCalc('.')" class="calc-btn bg-slate-100 py-3 rounded-xl">.</button>
-      <button onclick="pressCalc('=')" class="calc-btn bg-emerald-700 text-white py-3 rounded-xl">=</button>
-    </div>
-
-    <div id="calcActions" class="grid grid-cols-2 gap-2"></div>
-  </div>
-</div>
-
-<!-- Add Party / Shop / House / Category Modal -->
-<div id="promptModal" class="fixed inset-0 bg-black/50 z-50 hidden items-center justify-center p-4 max-w-[480px] mx-auto">
-  <div class="bg-white rounded-2xl p-5 w-full shadow-xl">
-    <h3 id="promptTitle" class="font-bold text-lg text-slate-800 mb-3">নতুন তথ্য যোগ করুন</h3>
-    <div id="promptFields" class="space-y-3 mb-4"></div>
-    <div class="flex justify-end gap-2">
-      <button onclick="closePrompt()" class="px-4 py-2 rounded-lg bg-slate-100 text-slate-700 font-semibold text-sm">বাতিল</button>
-      <button id="promptSaveBtn" class="px-4 py-2 rounded-lg bg-emerald-800 text-white font-semibold text-sm">সেভ করুন</button>
-    </div>
-  </div>
-</div>
-
-<script>
-  const todayStr = () => new Date().toISOString().split('T');
-
-  // Clean Empty State (No Demo Data)
-  const cleanState = {
-    mode: 'shop',
-    activeTab: 'home',
-    selectedShopId: 'shop1',
-    selectedHouseId: 'house1',
-    shopTab: 'customer',
-    selectedPartyId: null,
-    shops: [
-      { id: 'shop1', name: 'আমার দোকান', openingCash: 0 }
-    ],
-    parties: [],
-    shopTxns: [],
-    cashTxns: [],
-    salesClosings: [],
-    houses: [
-      { id: 'house1', name: 'আমার বাড়ি' }
-    ],
-    personalCategories: ['বাজার', 'বাসা ভাড়া', 'বিদ্যুৎ বিল', 'চিকিৎসা', 'অন্যান্য'],
-    selectedCategories: [],
-    personalTxns: []
-  };
-
-  // Clear old demo storage once on v2 upgrade
-  if (!localStorage.getItem('hisabProCleanV2')) {
-    localStorage.removeItem('hisabProState');
-    localStorage.setItem('hisabProCleanV2', 'true');
-  }
-
-  let state = JSON.parse(localStorage.getItem('hisabProState')) || cleanState;
-  const saveState = () => localStorage.setItem('hisabProState', JSON.stringify(state));
-
-  // Hardware / Mobile Back Button Handler (Prevents App Exit)
-  window.history.pushState({ appView: 'root' }, '');
-  window.addEventListener('popstate', () => {
-    const calcModal = document.getElementById('calcModal');
-    const promptModal = document.getElementById('promptModal');
-
-    if (!calcModal.classList.contains('hidden')) {
-      closeCalc();
-      window.history.pushState({ appView: 'modalClosed' }, '');
-      return;
+    body {
+      background-color: #e2e8f0;
+      color: #1e293b;
+      overscroll-behavior-y: contain;
     }
-    if (!promptModal.classList.contains('hidden')) {
-      closePrompt();
-      window.history.pushState({ appView: 'modalClosed' }, '');
-      return;
+    .app-shell {
+      max-width: 480px;
+      margin: 0 auto;
+      min-height: 100vh;
+      background: #f8fafc;
+      position: relative;
+      padding-bottom: 85px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.08);
     }
-    if (state.selectedPartyId) {
-      state.selectedPartyId = null;
-      render();
-      window.history.pushState({ appView: 'home' }, '');
-      return;
+    /* Top Bar */
+    .top-bar {
+      background: linear-gradient(135deg, #0f4c3a 0%, #16654e 100%);
+      color: #ffffff;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 30;
     }
+    .brand-box {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .logo-badge {
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.25);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .logo-badge svg {
+      width: 20px;
+      height: 20px;
+      color: #6ee7b7;
+    }
+    .brand-title {
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+    }
+    .mode-switch {
+      background: rgba(0,0,0,0.25);
+      padding: 4px;
+      border-radius: 999px;
+      display: flex;
+      gap: 4px;
+    }
+    .mode-btn {
+      border: none;
+      padding: 6px 14px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      background: transparent;
+      color: rgba(255,255,255,0.9);
+    }
+    .mode-btn.active {
+      background: #ffffff;
+      color: #0f4c3a;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+    }
+    /* Header Card Area */
+    .header-area {
+      background: linear-gradient(135deg, #0f4c3a 0%, #16654e 100%);
+      color: #ffffff;
+      padding: 8px 16px 24px 16px;
+      border-bottom-left-radius: 26px;
+      border-bottom-right-radius: 26px;
+      box-shadow: 0 4px 12px rgba(15, 76, 58, 0.18);
+    }
+    .row-between {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+    .select-box {
+      background: rgba(255,255,255,0.16);
+      border: 1px solid rgba(255,255,255,0.3);
+      color: #ffffff;
+      font-size: 15px;
+      font-weight: 700;
+      padding: 7px 12px;
+      border-radius: 12px;
+      outline: none;
+    }
+    .select-box option {
+      color: #0f172a;
+    }
+    .btn-outline-light {
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.35);
+      color: #ffffff;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 7px 12px;
+      border-radius: 12px;
+      cursor: pointer;
+    }
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .stat-card {
+      background: #ffffff;
+      color: #1e293b;
+      border-radius: 16px;
+      padding: 12px;
+      text-align: center;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+    }
+    .stat-label {
+      font-size: 12px;
+      color: #64748b;
+      font-weight: 600;
+    }
+    .stat-val {
+      font-size: 20px;
+      font-weight: 800;
+      margin-top: 2px;
+    }
+    .text-green { color: #047857; }
+    .text-red { color: #e11d48; }
+    .text-amber { color: #d97706; }
+
+    .grid-3-bar {
+      background: #ffffff;
+      border-radius: 16px;
+      padding: 10px 6px;
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      text-align: center;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+    }
+    .grid-3-bar > div:not(:last-child) {
+      border-right: 1px solid #e2e8f0;
+    }
+    .mini-label { font-size: 11px; color: #64748b; font-weight: 600; }
+    .mini-val { font-size: 14px; font-weight: 800; margin-top: 2px; }
+
+    /* Body Content */
+    .content-pad {
+      padding: 16px;
+    }
+    .tab-switch {
+      background: #e2e8f0;
+      padding: 4px;
+      border-radius: 14px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      margin-bottom: 14px;
+    }
+    .tab-btn {
+      border: none;
+      padding: 9px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 700;
+      background: transparent;
+      color: #475569;
+      cursor: pointer;
+    }
+    .tab-btn.active {
+      background: #ffffff;
+      color: #0f4c3a;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+    }
+    .list-item {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 16px;
+      padding: 14px;
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+    }
+    .item-title { font-size: 16px; font-weight: 700; color: #0f172a; }
+    .item-sub { font-size: 12px; color: #64748b; margin-top: 2px; }
+    .empty-msg {
+      text-align: center;
+      color: #64748b;
+      font-size: 14px;
+      padding: 36px 16px;
+      background: #ffffff;
+      border-radius: 16px;
+      border: 1px dashed #cbd5e1;
+    }
+
+    /* Floating Action Button */
+    .fab-wrap {
+      position: fixed;
+      bottom: 68px;
+      left: 0;
+      right: 0;
+      max-width: 480px;
+      margin: 0 auto;
+      padding: 0 16px;
+      z-index: 25;
+    }
+    .btn-primary-full {
+      width: 100%;
+      background: #0f4c3a;
+      color: #ffffff;
+      border: none;
+      padding: 13px;
+      border-radius: 16px;
+      font-size: 15px;
+      font-weight: 700;
+      box-shadow: 0 4px 12px rgba(15, 76, 58, 0.3);
+      cursor: pointer;
+    }
+
+    /* Bottom Navigation */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      max-width: 480px;
+      margin: 0 auto;
+      background: #ffffff;
+      border-top: 1px solid #e2e8f0;
+      display: flex;
+      justify-content: space-around;
+      padding: 8px 0;
+      z-index: 30;
+    }
+    .nav-item {
+      border: none;
+      background: transparent;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      font-size: 11px;
+      font-weight: 600;
+      color: #64748b;
+      cursor: pointer;
+      gap: 3px;
+    }
+    .nav-item svg {
+      width: 22px;
+      height: 22px;
+    }
+    .nav-item.active {
+      color: #0f4c3a;
+      font-weight: 800;
+    }
+
+    /* Profile & Action Cards */
+    .card-box {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 16px;
+      padding: 14px;
+      margin-bottom: 12px;
+    }
+    .input-field {
+      width: 100%;
+      border: 1px solid #cbd5e1;
+      border-radius: 10px;
+      padding: 9px 12px;
+      font-size: 14px;
+      outline: none;
+    }
+    .btn-wa {
+      background: #16a34a;
+      color: #ffffff;
+      border: none;
+      padding: 10px;
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .btn-sms {
+      background: #0284c7;
+      color: #ffffff;
+      border: none;
+      padding: 10px;
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .btn-red {
+      background: #e11d48;
+      color: #ffffff;
+      border: none;
+      padding: 12px;
+      border-radius: 14px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .btn-green {
+      background: #047857;
+      color: #ffffff;
+      border: none;
+      padding: 12px;
+      border-radius: 14px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    /* Chips */
+    .chip-wrap {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 14px;
+    }
+    .chip {
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 600;
+      border: 1px solid #cbd5e1;
+      background: #ffffff;
+      color: #334155;
+      cursor: pointer;
+    }
+    .chip.active {
+      background: #0f4c3a;
+      color: #ffffff;
+      border-color: #0f4c3a;
+    }
+
+    /* Modals & Calculator */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.55);
+      z-index: 50;
+      display: none;
+      flex-direction: column;
+      justify-content: flex-end;
+      max-width: 480px;
+      margin: 0 auto;
+    }
+    .modal-overlay.show {
+      display: flex;
+    }
+    .modal-center {
+      justify-content: center;
+      padding: 16px;
+    }
+    .drawer-box {
+      background: #ffffff;
+      border-top-left-radius: 24px;
+      border-top-right-radius: 24px;
+      padding: 16px;
+    }
+    .dialog-box {
+      background: #ffffff;
+      border-radius: 20px;
+      padding: 18px;
+      width: 100%;
+    }
+    .calc-screen {
+      background: #f1f5f9;
+      border: 1px solid #cbd5e1;
+      border-radius: 12px;
+      padding: 10px 14px;
+      margin: 10px 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .calc-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .calc-key {
+      background: #f1f5f9;
+      border: none;
+      border-radius: 12px;
+      padding: 14px 0;
+      font-size: 18px;
+      font-weight: 700;
+      color: #0f172a;
+      cursor: pointer;
+    }
+    .calc-key:active { background: #cbd5e1; }
+    .key-clear { background: #ffe4e6; color: #be123c; }
+    .key-op { background: #d1fae5; color: #065f46; }
