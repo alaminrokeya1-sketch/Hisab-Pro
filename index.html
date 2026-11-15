@@ -8,14 +8,18 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <title>Hisab Pro - হিসাব প্রো</title>
   <link rel="manifest" href="manifest.json" />
-  <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://googleapis.com" rel="stylesheet">
+  <script src="https://tailwindcss.com"></script>
   <style>
-    * { font-family: 'Hind Siliguri', sans-serif; -webkit-tap-highlight-color: transparent; }
+    * { 
+      font-family: 'Noto Sans Bengali', system-ui, -apple-system, sans-serif; 
+      -webkit-tap-highlight-color: transparent;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
     body { background-color: #e5e7eb; margin: 0; padding: 0; overscroll-behavior-y: contain; }
     .app-shell { max-width: 480px; margin: 0 auto; min-height: 100vh; background: #f8fafc; position: relative; padding-bottom: 76px; box-shadow: 0 0 25px rgba(0,0,0,0.08); }
     .header-bg { background: linear-gradient(135deg, #0f4c3a 0%, #16654e 100%); }
-    .hide-scrollbar::-webkit-scrollbar { display: none; }
     .calc-btn { transition: transform 0.06s, background-color 0.1s; user-select: none; }
     .calc-btn:active { transform: scale(0.95); background-color: #e2e8f0; }
   </style>
@@ -26,7 +30,6 @@
   <!-- Top Mode Switcher Bar -->
   <div class="header-bg text-white px-4 pt-3 pb-2 flex items-center justify-between sticky top-0 z-30">
     <div class="flex items-center gap-2">
-      <!-- Custom SVG Logo (Without Taka Symbol) -->
       <div class="w-8 h-8 rounded-lg bg-white/15 flex items-center justify-center border border-white/25">
         <svg class="w-5 h-5 text-emerald-300" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
@@ -65,27 +68,23 @@
   <div class="bg-white rounded-t-2xl p-4 shadow-2xl">
     <div class="flex justify-between items-center mb-2">
       <span id="calcTitle" class="font-bold text-slate-800 text-base">লেনদেন যোগ করুন</span>
-      <button onclick="closeCalc()" class="text-slate-400 hover:text-slate-700 text-xl font-bold px-2">&times;</button>
+      <button onclick="closeCalc()" class="text-slate-400 hover:text-slate-700 text-2xl font-bold px-2">&times;</button>
     </div>
 
-    <!-- Note & Date Inputs -->
     <div class="grid grid-cols-2 gap-2 mb-2">
       <input type="text" id="calcNote" placeholder="বিবরণ লিখুন (যেমন: নগদ / বাকি)" class="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-emerald-700" />
       <input type="date" id="calcDate" class="border border-slate-300 rounded-lg px-2 py-2 text-sm focus:outline-none focus:border-emerald-700" />
     </div>
 
-    <!-- Category Selector (Only for Personal Mode) -->
     <div id="calcCategoryWrap" class="mb-2 hidden">
       <select id="calcCategory" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm bg-white"></select>
     </div>
 
-    <!-- Calculator Display -->
     <div class="bg-slate-100 border border-slate-300 rounded-xl px-3 py-2.5 mb-3 flex justify-between items-center">
       <span class="text-xs text-slate-500 font-medium" id="calcExpr">0</span>
       <span class="text-2xl font-bold text-emerald-900">৳ <span id="calcDisplay">0</span></span>
     </div>
 
-    <!-- Custom Calculator Keypad -->
     <div class="grid grid-cols-4 gap-2 mb-3 text-lg font-bold text-slate-800">
       <button onclick="pressCalc('7')" class="calc-btn bg-slate-100 py-3 rounded-xl">7</button>
       <button onclick="pressCalc('8')" class="calc-btn bg-slate-100 py-3 rounded-xl">8</button>
@@ -108,7 +107,6 @@
       <button onclick="pressCalc('=')" class="calc-btn bg-emerald-700 text-white py-3 rounded-xl">=</button>
     </div>
 
-    <!-- Action Buttons -->
     <div id="calcActions" class="grid grid-cols-2 gap-2"></div>
   </div>
 </div>
@@ -126,9 +124,10 @@
 </div>
 
 <script>
-  const todayStr = () => new Date().toISOString().split('T')[0];
+  const todayStr = () => new Date().toISOString().split('T');
 
-  const defaultData = {
+  // Clean Empty State (No Demo Data)
+  const cleanState = {
     mode: 'shop',
     activeTab: 'home',
     selectedShopId: 'shop1',
@@ -136,653 +135,48 @@
     shopTab: 'customer',
     selectedPartyId: null,
     shops: [
-      { id: 'shop1', name: 'বিসমিল্লাহ স্টোর', openingCash: 5000 }
+      { id: 'shop1', name: 'আমার দোকান', openingCash: 0 }
     ],
-    parties: [
-      { id: 'p1', shopId: 'shop1', type: 'customer', name: 'রহিম উদ্দিন', phone: '01711234567' },
-      { id: 'p2', shopId: 'shop1', type: 'supplier', name: 'করিম ট্রেডার্স', phone: '01999887766' }
-    ],
-    shopTxns: [
-      { id: 't1', shopId: 'shop1', partyId: 'p1', kind: 'given', amount: 5400, note: 'বাকিতে মাল বিক্রয়', date: todayStr() },
-      { id: 't2', shopId: 'shop1', partyId: 'p2', kind: 'received', amount: 2100, note: 'মাল ক্রয় বাকি', date: todayStr() }
-    ],
-    cashTxns: [
-      { id: 'c1', shopId: 'shop1', type: 'in', amount: 10000, note: 'নগদ বিক্রয়', date: todayStr() },
-      { id: 'c2', shopId: 'shop1', type: 'out', amount: 2000, note: 'দোকান খরচ', date: todayStr() }
-    ],
+    parties: [],
+    shopTxns: [],
+    cashTxns: [],
     salesClosings: [],
     houses: [
-      { id: 'house1', name: 'বাড়ি ১' }
+      { id: 'house1', name: 'আমার বাড়ি' }
     ],
     personalCategories: ['বাজার', 'বাসা ভাড়া', 'বিদ্যুৎ বিল', 'চিকিৎসা', 'অন্যান্য'],
     selectedCategories: [],
-    personalTxns: [
-      { id: 'pt1', houseId: 'house1', type: 'income', category: 'অন্যান্য', amount: 45000, note: 'মাসিক আয়', date: todayStr() },
-      { id: 'pt2', houseId: 'house1', type: 'expense', category: 'বাজার', amount: 2500, note: 'সাপ্তাহিক বাজার', date: todayStr() }
-    ]
+    personalTxns: []
   };
 
-  let state = JSON.parse(localStorage.getItem('hisabProState')) || defaultData;
+  // Clear old demo storage once on v2 upgrade
+  if (!localStorage.getItem('hisabProCleanV2')) {
+    localStorage.removeItem('hisabProState');
+    localStorage.setItem('hisabProCleanV2', 'true');
+  }
+
+  let state = JSON.parse(localStorage.getItem('hisabProState')) || cleanState;
   const saveState = () => localStorage.setItem('hisabProState', JSON.stringify(state));
 
-  function switchMode(mode) {
-    state.mode = mode;
-    state.selectedPartyId = null;
-    state.activeTab = 'home';
-    saveState();
-    render();
-  }
+  // Hardware / Mobile Back Button Handler (Prevents App Exit)
+  window.history.pushState({ appView: 'root' }, '');
+  window.addEventListener('popstate', () => {
+    const calcModal = document.getElementById('calcModal');
+    const promptModal = document.getElementById('promptModal');
 
-  function navigate(tab) {
-    state.activeTab = tab;
-    state.selectedPartyId = null;
-    saveState();
-    render();
-  }
-
-  function render() {
-    document.getElementById('modeBtnShop').className = state.mode === 'shop'
-      ? 'px-3 py-1 rounded-full bg-white text-emerald-900 transition shadow-sm'
-      : 'px-3 py-1 rounded-full text-white/90 transition';
-    document.getElementById('modeBtnPersonal').className = state.mode === 'personal'
-      ? 'px-3 py-1 rounded-full bg-white text-emerald-900 transition shadow-sm'
-      : 'px-3 py-1 rounded-full text-white/90 transition';
-
-    document.getElementById('navCashbox').style.display = state.mode === 'shop' ? 'flex' : 'none';
-
-    document.querySelectorAll('.nav-item').forEach(btn => {
-      const active = btn.dataset.tab === state.activeTab;
-      btn.className = `nav-item flex flex-col items-center text-xs ${active ? 'text-emerald-800 font-bold' : 'text-slate-500 font-medium'}`;
-    });
-
-    const container = document.getElementById('mainContent');
-    if (state.mode === 'shop') {
-      if (state.selectedPartyId) {
-        container.innerHTML = renderPartyProfile();
-      } else if (state.activeTab === 'home') {
-        container.innerHTML = renderShopHome();
-      } else if (state.activeTab === 'cashbox') {
-        container.innerHTML = renderCashbox();
-      } else {
-        container.innerHTML = renderReports();
-      }
-    } else {
-      if (state.activeTab === 'home') {
-        container.innerHTML = renderPersonalHome();
-      } else {
-        container.innerHTML = renderReports();
-      }
-    }
-  }
-
-  function renderShopHome() {
-    const shop = state.shops.find(s => s.id === state.selectedShopId) || state.shops[0];
-    const shopTxns = state.shopTxns.filter(t => t.shopId === shop.id);
-    const parties = state.parties.filter(p => p.shopId === shop.id);
-
-    let totalPabo = 0, totalDebo = 0, todayBakiGiven = 0, todayBakiGot = 0;
-    parties.forEach(p => {
-      const pTxns = shopTxns.filter(t => t.partyId === p.id);
-      const bal = pTxns.reduce((acc, t) => acc + (t.kind === 'given' ? t.amount : -t.amount), 0);
-      if (bal > 0) totalPabo += bal;
-      if (bal < 0) totalDebo += Math.abs(bal);
-    });
-
-    const today = todayStr();
-    shopTxns.filter(t => t.date === today).forEach(t => {
-      if (t.kind === 'given') todayBakiGiven += t.amount;
-      if (t.kind === 'received') todayBakiGot += t.amount;
-    });
-    const todayNetBaki = todayBakiGiven - todayBakiGot;
-
-    const filteredParties = parties.filter(p => p.type === state.shopTab);
-
-    return `
-      <div class="header-bg text-white px-4 pt-2 pb-6 rounded-b-3xl shadow-md">
-        <div class="flex justify-between items-center mb-4">
-          <select onchange="changeShop(this.value)" class="bg-white/15 border border-white/25 text-white font-bold text-base rounded-xl px-3 py-1.5 focus:outline-none">
-            ${state.shops.map(s => `<option value="${s.id}" class="text-slate-900" ${s.id === shop.id ? 'selected' : ''}>${s.name}</option>`).join('')}
-          </select>
-          <button onclick="openAddShopModal()" class="bg-emerald-600/80 border border-white/30 text-white text-xs font-semibold px-3 py-1.5 rounded-xl">+ নতুন দোকান</button>
-        </div>
-
-        <div class="grid grid-cols-2 gap-3 mb-3">
-          <div class="bg-white text-slate-800 rounded-2xl p-3 text-center shadow">
-            <div class="text-xs text-slate-500 font-semibold">পাবো (মোট)</div>
-            <div class="text-xl font-bold text-emerald-700 mt-0.5">৳ ${totalPabo.toLocaleString()}</div>
-          </div>
-          <div class="bg-white text-slate-800 rounded-2xl p-3 text-center shadow">
-            <div class="text-xs text-slate-500 font-semibold">দেবো (মোট)</div>
-            <div class="text-xl font-bold text-rose-600 mt-0.5">৳ ${totalDebo.toLocaleString()}</div>
-          </div>
-        </div>
-
-        <div class="bg-white rounded-2xl p-2.5 grid grid-cols-3 divide-x divide-slate-200 text-center shadow">
-          <div>
-            <div class="text-[11px] text-slate-500 font-semibold">আজকের বাকি</div>
-            <div class="text-sm font-bold text-rose-600">৳ ${todayNetBaki.toLocaleString()}</div>
-          </div>
-          <div>
-            <div class="text-[11px] text-slate-500 font-semibold">বাকি পেলাম</div>
-            <div class="text-sm font-bold text-emerald-700">৳ ${todayBakiGot.toLocaleString()}</div>
-          </div>
-          <div>
-            <div class="text-[11px] text-slate-500 font-semibold">বাকি দিলাম</div>
-            <div class="text-sm font-bold text-amber-600">৳ ${todayBakiGiven.toLocaleString()}</div>
-          </div>
-        </div>
-      </div>
-
-      <div class="px-4 mt-4">
-        <div class="bg-slate-200 p-1 rounded-xl grid grid-cols-2 text-sm font-bold mb-3">
-          <button onclick="setShopTab('customer')" class="py-2 rounded-lg transition ${state.shopTab === 'customer' ? 'bg-white text-emerald-900 shadow-sm' : 'text-slate-600'}">কাস্টমার খাতা</button>
-          <button onclick="setShopTab('supplier')" class="py-2 rounded-lg transition ${state.shopTab === 'supplier' ? 'bg-white text-emerald-900 shadow-sm' : 'text-slate-600'}">সাপ্লায়ার খাতা</button>
-        </div>
-
-        <div class="space-y-2.5 mb-20">
-          ${filteredParties.length === 0 ? `<div class="text-center text-slate-400 py-8 text-sm">কোনো তালিকা পাওয়া যায়নি</div>` : ''}
-          ${filteredParties.map(p => {
-            const pTxns = shopTxns.filter(t => t.partyId === p.id);
-            const bal = pTxns.reduce((acc, t) => acc + (t.kind === 'given' ? t.amount : -t.amount), 0);
-            const lastDate = pTxns.length ? pTxns[pTxns.length - 1].date : 'নতুন';
-            return `
-              <div onclick="openParty('${p.id}')" class="bg-white p-3.5 rounded-2xl border border-slate-100 shadow-sm flex justify-between items-center cursor-pointer active:bg-slate-50">
-                <div>
-                  <div class="font-bold text-slate-800 text-base">${p.name}</div>
-                  <div class="text-xs text-slate-400">${p.phone} • ${lastDate}</div>
-                </div>
-                <div class="text-right">
-                  <div class="font-bold text-base ${bal >= 0 ? 'text-emerald-700' : 'text-rose-600'}">৳ ${Math.abs(bal).toLocaleString()}</div>
-                  <div class="text-[11px] font-semibold ${bal >= 0 ? 'text-emerald-600' : 'text-rose-500'}">${bal >= 0 ? 'পাবো' : 'দেবো'}</div>
-                </div>
-              </div>
-            `;
-          }).join('')}
-        </div>
-
-        <div class="fixed bottom-16 left-0 right-0 max-w-[480px] mx-auto px-4 pointer-events-none">
-          <button onclick="openAddPartyModal()" class="pointer-events-auto w-full bg-emerald-800 text-white font-bold py-3 rounded-2xl shadow-lg flex items-center justify-center gap-2">
-            <span class="text-xl leading-none">+</span> কাস্টমার / সাপ্লায়ার যোগ করুন
-          </button>
-        </div>
-      </div>
-    `;
-  }
-
-  function renderPartyProfile() {
-    const party = state.parties.find(p => p.id === state.selectedPartyId);
-    const txns = state.shopTxns.filter(t => t.partyId === party.id);
-    const filterFrom = document.getElementById('waFilterFrom')?.value || '';
-    const filterTo = document.getElementById('waFilterTo')?.value || '';
-
-    let running = 0;
-    const txnsWithBal = txns.map(t => {
-      running += (t.kind === 'given' ? t.amount : -t.amount);
-      return { ...t, balanceAfter: running };
-    });
-
-    const netBal = running;
-
-    return `
-      <div class="header-bg text-white px-4 pt-3 pb-5 rounded-b-3xl shadow">
-        <div class="flex items-center justify-between mb-3">
-          <button onclick="navigate('home')" class="flex items-center gap-1 text-sm font-semibold bg-white/15 px-3 py-1 rounded-lg">← ফিরে যান</button>
-          <span class="text-xs bg-white/20 px-2.5 py-1 rounded-full">${party.type === 'customer' ? 'কাস্টমার' : 'সাপ্লায়ার'}</span>
-        </div>
-        <div class="flex justify-between items-end">
-          <div>
-            <h2 class="text-xl font-bold">${party.name}</h2>
-            <p class="text-xs text-emerald-200">${party.phone}</p>
-          </div>
-          <div class="text-right bg-white/15 px-3 py-1.5 rounded-xl">
-            <div class="text-[11px] text-emerald-100">${netBal >= 0 ? 'মোট পাবো' : 'মোট দেবো'}</div>
-            <div class="text-lg font-bold">৳ ${Math.abs(netBal).toLocaleString()}</div>
-          </div>
-        </div>
-      </div>
-
-      <div class="p-4 space-y-3">
-        <div class="bg-white p-3 rounded-2xl border border-slate-200 shadow-sm">
-          <div class="text-xs font-bold text-slate-600 mb-2">তারিখ ফিল্টার করে হিসাব পাঠান:</div>
-          <div class="grid grid-cols-2 gap-2 mb-2.5">
-            <input type="date" id="waFilterFrom" value="${filterFrom}" class="border border-slate-300 rounded-lg px-2 py-1.5 text-xs" />
-            <input type="date" id="waFilterTo" value="${filterTo}" class="border border-slate-300 rounded-lg px-2 py-1.5 text-xs" />
-          </div>
-          <div class="grid grid-cols-2 gap-2">
-            <button onclick="sendWhatsAppStatement('${party.id}')" class="bg-emerald-600 text-white font-bold py-2 rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-sm">
-              WhatsApp পাঠান
-            </button>
-            <button onclick="sendDirectSMS('${party.id}', ${netBal})" class="bg-sky-600 text-white font-bold py-2 rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-sm">
-              SMS তাগাদা
-            </button>
-          </div>
-        </div>
-
-        <div class="space-y-2 pb-20">
-          ${txnsWithBal.slice().reverse().map(t => `
-            <div class="bg-white p-3 rounded-xl border border-slate-100 shadow-sm flex justify-between items-center">
-              <div>
-                <div class="font-bold text-slate-800 text-sm">${t.note || (t.kind === 'given' ? 'দিলাম' : 'পেলাম')}</div>
-                <div class="text-[11px] text-slate-400">${t.date}</div>
-              </div>
-              <div class="text-right">
-                <div class="font-bold text-sm ${t.kind === 'given' ? 'text-rose-600' : 'text-emerald-700'}">
-                  ৳ ${t.amount.toLocaleString()} (${t.kind === 'given' ? 'দিলাম' : 'পেলাম'})
-                </div>
-                <div class="text-[11px] text-slate-500">ব্যালেন্স: ৳ ${t.balanceAfter.toLocaleString()}</div>
-              </div>
-            </div>
-          `).join('')}
-        </div>
-
-        <div class="fixed bottom-16 left-0 right-0 max-w-[480px] mx-auto px-4 grid grid-cols-2 gap-2">
-          <button onclick="openPartyCalc('given')" class="bg-rose-600 text-white font-bold py-3 rounded-xl shadow-lg text-sm">দিলাম (-)</button>
-          <button onclick="openPartyCalc('received')" class="bg-emerald-700 text-white font-bold py-3 rounded-xl shadow-lg text-sm">নিউ ট্যাব / জমা (+)</button>
-        </div>
-      </div>
-    `;
-  }
-
-  function renderPersonalHome() {
-    const house = state.houses.find(h => h.id === state.selectedHouseId) || state.houses[0];
-    const allTxns = state.personalTxns.filter(t => t.houseId === house.id);
-
-    const visibleTxns = state.selectedCategories.length > 0
-      ? allTxns.filter(t => state.selectedCategories.includes(t.category))
-      : allTxns;
-
-    const totalIncome = visibleTxns.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
-    const totalExpense = visibleTxns.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
-    const balance = totalIncome - totalExpense;
-
-    return `
-      <div class="header-bg text-white px-4 pt-3 pb-6 rounded-b-3xl shadow-md">
-        <div class="flex justify-between items-center mb-4">
-          <select onchange="changeHouse(this.value)" class="bg-white/15 border border-white/25 text-white font-bold text-base rounded-xl px-3 py-1.5 focus:outline-none">
-            ${state.houses.map(h => `<option value="${h.id}" class="text-slate-900" ${h.id === house.id ? 'selected' : ''}>${h.name}</option>`).join('')}
-          </select>
-          <button onclick="openAddHouseModal()" class="bg-emerald-600/80 border border-white/30 text-white text-xs font-semibold px-3 py-1.5 rounded-xl">+ নতুন বাড়ি</button>
-        </div>
-
-        <div class="bg-white text-slate-800 rounded-2xl p-3.5 shadow space-y-1.5">
-          <div class="flex justify-between text-sm font-bold">
-            <span class="text-slate-500">মোট আয়:</span>
-            <span class="text-emerald-700">৳ ${totalIncome.toLocaleString()}</span>
-          </div>
-          <div class="flex justify-between text-sm font-bold">
-            <span class="text-slate-500">মোট ব্যয়:</span>
-            <span class="text-rose-600">৳ ${totalExpense.toLocaleString()}</span>
-          </div>
-          <div class="border-t pt-1.5 flex justify-between text-base font-bold">
-            <span class="text-slate-800">বর্তমান স্থিতি:</span>
-            <span class="text-emerald-900">৳ ${balance.toLocaleString()}</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="p-4">
-        <div class="flex justify-between items-center mb-2">
-          <span class="text-xs font-bold text-slate-600">ক্যাটাগরি ফিল্টার (একাধিক নির্বাচন)</span>
-          <button onclick="openAddCategoryModal()" class="text-xs font-bold text-emerald-800 bg-emerald-100 px-2.5 py-1 rounded-lg">+ নতুন ক্যাটাগরি</button>
-        </div>
-        <div class="flex flex-wrap gap-1.5 mb-4">
-          ${state.personalCategories.map(cat => {
-            const active = state.selectedCategories.includes(cat);
-            return `<button onclick="toggleCategory('${cat}')" class="px-3 py-1 rounded-full text-xs font-semibold border transition ${active ? 'bg-emerald-800 text-white border-emerald-800' : 'bg-white text-slate-700 border-slate-300'}">${cat}</button>`;
-          }).join('')}
-        </div>
-
-        <h3 class="font-bold text-slate-800 text-sm mb-2">সাম্প্রতিক লেনদেন</h3>
-        <div class="space-y-2 pb-20">
-          ${visibleTxns.slice().reverse().map(t => `
-            <div class="bg-white p-3 rounded-xl border border-slate-100 shadow-sm flex justify-between items-center">
-              <div>
-                <div class="font-bold text-slate-800 text-sm">${t.category} ${t.note ? `- ${t.note}` : ''}</div>
-                <div class="text-[11px] text-slate-400">${t.date}</div>
-              </div>
-              <div class="font-bold text-sm ${t.type === 'income' ? 'text-emerald-700' : 'text-rose-600'}">
-                ${t.type === 'income' ? '+' : '-'} ৳ ${t.amount.toLocaleString()}
-              </div>
-            </div>
-          `).join('')}
-        </div>
-
-        <div class="fixed bottom-16 left-0 right-0 max-w-[480px] mx-auto px-4">
-          <button onclick="openPersonalCalc()" class="w-full bg-emerald-800 text-white font-bold py-3 rounded-2xl shadow-lg">
-            + আয় / ব্যয় যোগ করুন
-          </button>
-        </div>
-      </div>
-    `;
-  }
-
-  function renderCashbox() {
-    const shop = state.shops.find(s => s.id === state.selectedShopId) || state.shops[0];
-    const today = todayStr();
-    const cashTxns = state.cashTxns.filter(c => c.shopId === shop.id);
-    const todayCashIn = cashTxns.filter(c => c.date === today && c.type === 'in').reduce((s, c) => s + c.amount, 0);
-    const todayCashOut = cashTxns.filter(c => c.date === today && c.type === 'out').reduce((s, c) => s + c.amount, 0);
-
-    const shopTxnsToday = state.shopTxns.filter(t => t.shopId === shop.id && t.date === today);
-    const todayDueCollected = shopTxnsToday.filter(t => t.kind === 'received').reduce((s, t) => s + t.amount, 0);
-    const todayNewDue = shopTxnsToday.filter(t => t.kind === 'given').reduce((s, t) => s + t.amount, 0);
-
-    const currentCash = (shop.openingCash || 0) + todayCashIn + todayDueCollected - todayCashOut;
-
-    return `
-      <div class="header-bg text-white px-4 pt-3 pb-6 rounded-b-3xl shadow-md">
-        <h2 class="text-lg font-bold mb-3">ক্যাশবাক্স ও রাতের বিক্রি হিসাব</h2>
-        <div class="bg-white text-slate-800 rounded-2xl p-4 text-center shadow">
-          <div class="text-xs text-slate-500 font-semibold">বর্তমান ক্যাশ ব্যালেন্স</div>
-          <div class="text-2xl font-bold text-emerald-800 my-1">৳ ${currentCash.toLocaleString()}</div>
-          <div class="grid grid-cols-2 border-t pt-2 mt-2 text-xs">
-            <div><span class="text-slate-500">আজকের ক্যাশ ইন:</span> <strong class="text-emerald-700">+৳ ${todayCashIn.toLocaleString()}</strong></div>
-            <div><span class="text-slate-500">আজকের ক্যাশ আউট:</span> <strong class="text-rose-600">-৳ ${todayCashOut.toLocaleString()}</strong></div>
-          </div>
-        </div>
-      </div>
-
-      <div class="p-4 space-y-4 pb-20">
-        <div class="grid grid-cols-2 gap-2">
-          <button onclick="openCashCalc('in')" class="bg-emerald-700 text-white font-bold py-2.5 rounded-xl text-sm shadow">+ ক্যাশ ইন (জমা)</button>
-          <button onclick="openCashCalc('out')" class="bg-rose-600 text-white font-bold py-2.5 rounded-xl text-sm shadow">- ক্যাশ আউট (খরচ)</button>
-        </div>
-
-        <div class="bg-white p-4 rounded-2xl border border-emerald-200 shadow-sm space-y-3">
-          <h3 class="font-bold text-emerald-900 text-base border-b pb-2">দিনের বিক্রি হিসাব (রাতের ক্লোজিং)</h3>
-          <div>
-            <label class="text-xs font-bold text-slate-600">রাতে ক্যাশবাক্সে মোট টাকা (৳)</label>
-            <input type="number" id="closingCashInput" oninput="calcNightlySales()" placeholder="যেমন: 25000" class="w-full border-2 border-emerald-700 rounded-xl px-3 py-2 text-lg font-bold text-slate-900 mt-1" />
-          </div>
-          <div>
-            <label class="text-xs font-bold text-slate-600">ব্যাংক / বিকাশ জমা (৳)</label>
-            <input type="number" id="bankDepositInput" oninput="calcNightlySales()" placeholder="0" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-base font-bold text-slate-900 mt-1" />
-          </div>
-
-          <div class="bg-slate-50 p-3 rounded-xl space-y-1 text-xs text-slate-600">
-            <div class="flex justify-between"><span>দিনের শুরুতে ক্যাশ:</span><strong>৳ ${(shop.openingCash || 0).toLocaleString()}</strong></div>
-            <div class="flex justify-between"><span>আজকের বাকি আদায়:</span><strong>৳ ${todayDueCollected.toLocaleString()}</strong></div>
-            <div class="flex justify-between"><span>আজকের নতুন বাকি:</span><strong>৳ ${todayNewDue.toLocaleString()}</strong></div>
-            <div class="flex justify-between"><span>আজকের খরচ/ক্যাশ আউট:</span><strong>৳ ${todayCashOut.toLocaleString()}</strong></div>
-          </div>
-
-          <div class="bg-emerald-50 border border-emerald-300 rounded-xl p-3 text-center">
-            <div class="text-xs text-emerald-800 font-semibold">আজকের মোট বিক্রি</div>
-            <div id="calculatedSalesDisplay" class="text-2xl font-bold text-emerald-900">৳ 0</div>
-          </div>
-
-          <button onclick="saveNightlyClosing(${shop.openingCash || 0}, ${todayDueCollected}, ${todayNewDue}, ${todayCashOut})" class="w-full bg-emerald-800 text-white font-bold py-3 rounded-xl text-sm shadow">
-            হিসাব ক্লোজ করুন এবং সেভ করুন
-          </button>
-        </div>
-      </div>
-    `;
-  }
-
-  function calcNightlySales() {
-    const shop = state.shops.find(s => s.id === state.selectedShopId) || state.shops[0];
-    const today = todayStr();
-    const closingCash = parseFloat(document.getElementById('closingCashInput').value) || 0;
-    const bankDeposit = parseFloat(document.getElementById('bankDepositInput').value) || 0;
-
-    const todayCashOut = state.cashTxns.filter(c => c.shopId === shop.id && c.date === today && c.type === 'out').reduce((s, c) => s + c.amount, 0);
-    const shopTxnsToday = state.shopTxns.filter(t => t.shopId === shop.id && t.date === today);
-    const todayDueCollected = shopTxnsToday.filter(t => t.kind === 'received').reduce((s, t) => s + t.amount, 0);
-    const todayNewDue = shopTxnsToday.filter(t => t.kind === 'given').reduce((s, t) => s + t.amount, 0);
-
-    const totalSales = (closingCash + bankDeposit + todayCashOut + todayNewDue) - ((shop.openingCash || 0) + todayDueCollected);
-    document.getElementById('calculatedSalesDisplay').innerText = `৳ ${totalSales.toLocaleString()}`;
-  }
-
-  function saveNightlyClosing(opening, dueCol, newDue, expense) {
-    const closingCash = parseFloat(document.getElementById('closingCashInput').value);
-    if (isNaN(closingCash)) return alert('রাতে ক্যাশবাক্সে মোট টাকার পরিমাণ লিখুন');
-    const bankDeposit = parseFloat(document.getElementById('bankDepositInput').value) || 0;
-    const totalSales = (closingCash + bankDeposit + expense + newDue) - (opening + dueCol);
-
-    const shop = state.shops.find(s => s.id === state.selectedShopId) || state.shops[0];
-    shop.openingCash = closingCash;
-    state.salesClosings.push({ id: Date.now().toString(), shopId: shop.id, date: todayStr(), totalSales, closingCash, bankDeposit });
-    saveState();
-    alert(`আজকের মোট বিক্রি ৳ ${totalSales.toLocaleString()} সেভ হয়েছে এবং আগামীকালের শুরু ক্যাশ হিসেবে ৳ ${closingCash.toLocaleString()} সেট করা হয়েছে।`);
-    render();
-  }
-
-  function renderReports() {
-    return `
-      <div class="header-bg text-white px-4 pt-3 pb-5 rounded-b-3xl shadow">
-        <h2 class="text-lg font-bold">বিস্তারিত রিপোর্ট</h2>
-      </div>
-      <div class="p-4 space-y-3 pb-20">
-        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
-          <h3 class="font-bold text-slate-800 text-sm mb-2">দৈনিক বিক্রির ইতিহাস</h3>
-          ${state.salesClosings.length === 0 ? '<p class="text-xs text-slate-400">এখনো কোনো দিনের বিক্রি ক্লোজ করা হয়নি</p>' :
-            state.salesClosings.slice().reverse().map(s => `
-              <div class="flex justify-between py-2 border-b last:border-0 text-sm">
-                <span>${s.date}</span>
-                <strong class="text-emerald-800">বিক্রি: ৳ ${s.totalSales.toLocaleString()}</strong>
-              </div>
-            `).join('')
-          }
-        </div>
-      </div>
-    `;
-  }
-
-  function sendWhatsAppStatement(partyId) {
-    const party = state.parties.find(p => p.id === partyId);
-    const from = document.getElementById('waFilterFrom').value;
-    const to = document.getElementById('waFilterTo').value;
-    let txns = state.shopTxns.filter(t => t.partyId === partyId);
-    if (from) txns = txns.filter(t => t.date >= from);
-    if (to) txns = txns.filter(t => t.date <= to);
-
-    let msg = `*Hisab Pro - লেনদেনের হিসাব*\nনাম: ${party.name}\n`;
-    txns.forEach(t => {
-      msg += `${t.date}: ${t.kind === 'given' ? 'দিলাম' : 'পেলাম'} ৳${t.amount} (${t.note || ''})\n`;
-    });
-    const cleanPhone = party.phone.replace(/[^0-9]/g, '');
-    const waPhone = cleanPhone.startsWith('88') ? cleanPhone : '88' + cleanPhone;
-    window.open(`https://wa.me/${waPhone}?text=${encodeURIComponent(msg)}`, '_blank');
-  }
-
-  function sendDirectSMS(partyId, netBal) {
-    const party = state.parties.find(p => p.id === partyId);
-    const msg = `আসসালামু আলাইকুম ${party.name}, আপনার কাছে আমাদের মোট পাওনা ৳${Math.abs(netBal)} টাকা। অনুগ্রহ করে দ্রুত পরিশোধ করবেন। - Hisab Pro`;
-    window.location.href = `sms:${party.phone}?body=${encodeURIComponent(msg)}`;
-  }
-
-  let calcStr = '';
-
-  function openCalcModal(title, actionsHtml, showCat = false) {
-    calcStr = '';
-    document.getElementById('calcExpr').innerText = '0';
-    document.getElementById('calcDisplay').innerText = '0';
-    document.getElementById('calcNote').value = '';
-    document.getElementById('calcDate').value = todayStr();
-    document.getElementById('calcTitle').innerText = title;
-    document.getElementById('calcActions').innerHTML = actionsHtml;
-
-    const catWrap = document.getElementById('calcCategoryWrap');
-    if (showCat) {
-      catWrap.classList.remove('hidden');
-      document.getElementById('calcCategory').innerHTML = state.personalCategories.map(c => `<option value="${c}">${c}</option>`).join('');
-    } else {
-      catWrap.classList.add('hidden');
-    }
-
-    document.getElementById('calcModal').classList.remove('hidden');
-    document.getElementById('calcModal').classList.add('flex');
-  }
-
-  function closeCalc() {
-    document.getElementById('calcModal').classList.add('hidden');
-    document.getElementById('calcModal').classList.remove('flex');
-  }
-
-  function pressCalc(val) {
-    if (val === 'C') {
-      calcStr = '';
-      document.getElementById('calcExpr').innerText = '0';
-      document.getElementById('calcDisplay').innerText = '0';
+    if (!calcModal.classList.contains('hidden')) {
+      closeCalc();
+      window.history.pushState({ appView: 'modalClosed' }, '');
       return;
     }
-    if (val === '=') {
-      try {
-        const res = Function('"use strict";return (' + calcStr + ')')();
-        calcStr = String(res);
-        document.getElementById('calcDisplay').innerText = res;
-      } catch {
-        document.getElementById('calcDisplay').innerText = 'Error';
-      }
+    if (!promptModal.classList.contains('hidden')) {
+      closePrompt();
+      window.history.pushState({ appView: 'modalClosed' }, '');
       return;
     }
-    calcStr += val;
-    document.getElementById('calcExpr').innerText = calcStr;
-    try {
-      const res = Function('"use strict";return (' + calcStr + ')')();
-      if (!isNaN(res)) document.getElementById('calcDisplay').innerText = res;
-    } catch {}
-  }
-
-  function getCalcAmount() {
-    try {
-      return parseFloat(Function('"use strict";return (' + (calcStr || '0') + ')')()) || 0;
-    } catch {
-      return 0;
+    if (state.selectedPartyId) {
+      state.selectedPartyId = null;
+      render();
+      window.history.pushState({ appView: 'home' }, '');
+      return;
     }
-  }
-
-  function openPartyCalc(defaultKind) {
-    openCalcModal('লেনদেন এন্ট্রি', `
-      <button onclick="savePartyTxn('given')" class="bg-rose-600 text-white font-bold py-3 rounded-xl text-sm">দিলাম সেভ করুন</button>
-      <button onclick="savePartyTxn('received')" class="bg-emerald-700 text-white font-bold py-3 rounded-xl text-sm">পেলাম / জমা সেভ</button>
-    `);
-  }
-
-  function savePartyTxn(kind) {
-    const amount = getCalcAmount();
-    if (amount <= 0) return alert('সঠিক টাকার পরিমাণ লিখুন');
-    const note = document.getElementById('calcNote').value;
-    const date = document.getElementById('calcDate').value || todayStr();
-    state.shopTxns.push({ id: Date.now().toString(), shopId: state.selectedShopId, partyId: state.selectedPartyId, kind, amount, note, date });
-    saveState();
-    closeCalc();
-    render();
-  }
-
-  function openPersonalCalc() {
-    openCalcModal('ব্যক্তিগত আয় / ব্যয়', `
-      <button onclick="savePersonalTxn('income')" class="bg-emerald-700 text-white font-bold py-3 rounded-xl text-sm">আয় (+) সেভ</button>
-      <button onclick="savePersonalTxn('expense')" class="bg-rose-600 text-white font-bold py-3 rounded-xl text-sm">ব্যয় (-) সেভ</button>
-    `, true);
-  }
-
-  function savePersonalTxn(type) {
-    const amount = getCalcAmount();
-    if (amount <= 0) return alert('সঠিক টাকার পরিমাণ লিখুন');
-    const category = document.getElementById('calcCategory').value;
-    const note = document.getElementById('calcNote').value;
-    const date = document.getElementById('calcDate').value || todayStr();
-    state.personalTxns.push({ id: Date.now().toString(), houseId: state.selectedHouseId, type, category, amount, note, date });
-    saveState();
-    closeCalc();
-    render();
-  }
-
-  function openCashCalc(type) {
-    openCalcModal(type === 'in' ? 'ক্যাশ ইন (জমা)' : 'ক্যাশ আউট (খরচ)', `
-      <button onclick="saveCashTxn('${type}')" class="col-span-2 bg-emerald-800 text-white font-bold py-3 rounded-xl text-sm">সেভ করুন</button>
-    `);
-  }
-
-  function saveCashTxn(type) {
-    const amount = getCalcAmount();
-    if (amount <= 0) return alert('সঠিক টাকার পরিমাণ লিখুন');
-    const note = document.getElementById('calcNote').value;
-    const date = document.getElementById('calcDate').value || todayStr();
-    state.cashTxns.push({ id: Date.now().toString(), shopId: state.selectedShopId, type, amount, note, date });
-    saveState();
-    closeCalc();
-    render();
-  }
-
-  const changeShop = id => { state.selectedShopId = id; saveState(); render(); };
-  const changeHouse = id => { state.selectedHouseId = id; saveState(); render(); };
-  const setShopTab = t => { state.shopTab = t; saveState(); render(); };
-  const openParty = id => { state.selectedPartyId = id; render(); };
-  const toggleCategory = cat => {
-    if (state.selectedCategories.includes(cat)) state.selectedCategories = state.selectedCategories.filter(c => c !== cat);
-    else state.selectedCategories.push(cat);
-    render();
-  };
-
-  function showPrompt(title, fieldsHtml, onSave) {
-    document.getElementById('promptTitle').innerText = title;
-    document.getElementById('promptFields').innerHTML = fieldsHtml;
-    document.getElementById('promptSaveBtn').onclick = onSave;
-    document.getElementById('promptModal').classList.remove('hidden');
-    document.getElementById('promptModal').classList.add('flex');
-  }
-  const closePrompt = () => {
-    document.getElementById('promptModal').classList.add('hidden');
-    document.getElementById('promptModal').classList.remove('flex');
-  };
-
-  function openAddShopModal() {
-    showPrompt('নতুন দোকান যোগ করুন', `<input id="newShopName" placeholder="দোকানের নাম" class="w-full border rounded-lg p-2.5 text-sm"/>`, () => {
-      const name = document.getElementById('newShopName').value.trim();
-      if (!name) return;
-      const id = 'shop_' + Date.now();
-      state.shops.push({ id, name, openingCash: 0 });
-      state.selectedShopId = id;
-      saveState(); closePrompt(); render();
-    });
-  }
-
-  function openAddPartyModal() {
-    showPrompt('নতুন কাস্টমার / সাপ্লায়ার', `
-      <select id="newPartyType" class="w-full border rounded-lg p-2.5 text-sm">
-        <option value="customer">কাস্টমার</option>
-        <option value="supplier">সাপ্লায়ার</option>
-      </select>
-      <input id="newPartyName" placeholder="নাম লিখুন" class="w-full border rounded-lg p-2.5 text-sm"/>
-      <input id="newPartyPhone" placeholder="মোবাইল নম্বর (যেমন: 017...)" class="w-full border rounded-lg p-2.5 text-sm"/>
-    `, () => {
-      const type = document.getElementById('newPartyType').value;
-      const name = document.getElementById('newPartyName').value.trim();
-      const phone = document.getElementById('newPartyPhone').value.trim();
-      if (!name) return;
-      state.parties.push({ id: 'p_' + Date.now(), shopId: state.selectedShopId, type, name, phone });
-      saveState(); closePrompt(); render();
-    });
-  }
-
-  function openAddHouseModal() {
-    showPrompt('নতুন বাড়ি যোগ করুন', `<input id="newHouseName" placeholder="বাড়ির নাম (যেমন: বাড়ি ২)" class="w-full border rounded-lg p-2.5 text-sm"/>`, () => {
-      const name = document.getElementById('newHouseName').value.trim();
-      if (!name) return;
-      const id = 'house_' + Date.now();
-      state.houses.push({ id, name });
-      state.selectedHouseId = id;
-      saveState(); closePrompt(); render();
-    });
-  }
-
-  function openAddCategoryModal() {
-    showPrompt('নতুন ক্যাটাগরি যোগ করুন', `<input id="newCatName" placeholder="ক্যাটাগরির নাম" class="w-full border rounded-lg p-2.5 text-sm"/>`, () => {
-      const name = document.getElementById('newCatName').value.trim();
-      if (!name) return;
-      if (!state.personalCategories.includes(name)) state.personalCategories.push(name);
-      saveState(); closePrompt(); render();
-    });
-  }
-
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('sw.js').catch(() => {});
-  }
-
-  render();
-</script>
-</body>
-</html>
