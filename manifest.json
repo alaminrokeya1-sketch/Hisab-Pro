@@ -1,0 +1,17 @@
+{
+  "id": "./",
+  "name": "Hisab Pro — হিসাব প্রো",
+  "short_name": "Hisab Pro",
+  "description": "দোকান ও ব্যক্তিগত হিসাবের বাংলা অ্যাপ",
+  "lang": "bn-BD",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "portrait",
+  "background_color": "#f3f7f4",
+  "theme_color": "#103d32",
+  "icons": [
+    {"src":"icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}
+  ]
+}
